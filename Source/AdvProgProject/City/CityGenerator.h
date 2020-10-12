@@ -7,6 +7,17 @@
 #include "Engine.h"
 #include "CityGenerator.generated.h"
 
+/* The road generation works on a binary 2d map to dictate
+ * which road mesh should be used in its place. The grid works
+ * by adding the total route numbers possible and using that mesh:
+ *
+ *	   |  1  |  
+ *	--------------
+ *	2  |  R  |  4
+ *	--------------
+ *	   |  8  |  
+ */
+
 class ACityGenerator;
 // Event dispatcher for use after the city is generated and ready for the player
 DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnCityReady, ACityGenerator, OnCityReady);
@@ -20,6 +31,7 @@ enum class EDirection : uint8
 	SOUTH UMETA(DisplayName = "South"),
 	WEST UMETA(DisplayName = "West"),
 	MAX
+
 };
 
 // This class is derived from the BoxComponent class, and is used to populate the cityscape

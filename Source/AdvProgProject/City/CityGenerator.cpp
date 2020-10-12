@@ -33,14 +33,14 @@ void ACityGenerator::BeginPlay()
 	Super::BeginPlay();
 
 	// Derives the size of the city grid by dividing the box bounds by the size of the building
-	Rows = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().X / CityBuilding->GetBounds().GetBox().GetSize().X);
-	Columns = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().Y / CityBuilding->GetBounds().GetBox().GetSize().Y);
+	Columns = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().X / CityBuilding->GetBounds().GetBox().GetSize().X);
+	Rows = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().Y / CityBuilding->GetBounds().GetBox().GetSize().Y);
 	PopulationGrid.Init(true, Rows * Columns);
 	PopulationGrid[StartingPosition] = false;
-
+	
 	// We then want to generate a random city
 	DrunkardWalk();
-
+	
 	// We then generate the city, and declare it ready for the player
 	if (GenerateCity())
 	{
@@ -59,53 +59,61 @@ void ACityGenerator::DrunkardWalk()
 	while(PopulationGrid[EndingPosition])
 	{
 		CurrentPosition = Step(CurrentPosition);
-		PopulationGrid[CurrentPosition] = false;
+		if (PopulationGrid[CurrentPosition]) PopulationGrid[CurrentPosition] = false;
 	}
 }
 int32 ACityGenerator::Step(int32 DrunkardPosition)
 {
 	// We randomly select a direction for the drunkard to step
 	EDirection NextStep = EDirection(FMath::RandRange(0, 3));
-
+	
 	// We then use a switch to implement a step in that direction,
 	// by turning the array into a 2d grid, and stepping through it
 	switch(NextStep)
 	{
-	case EDirection::NORTH: if (DrunkardPosition < Columns) { break; }
-							return (DrunkardPosition - Columns);
-	case EDirection::EAST:	if (DrunkardPosition % Columns == Columns - 1) { break; }
-							return (DrunkardPosition + 1);
-	case EDirection::SOUTH: if (DrunkardPosition > Columns * (Rows - 1)) { break; }
-							return (DrunkardPosition + Columns);
-	case EDirection::WEST:	if (DrunkardPosition % Columns == 0) { break; }
-							return (DrunkardPosition - 1);
+	case EDirection::NORTH:	if (DrunkardPosition >= Columns) { return (DrunkardPosition - Columns); }
+							break;
+	case EDirection::EAST:	if (DrunkardPosition % Columns != Columns - 1) { return (DrunkardPosition + 1); }
+							break;
+	case EDirection::SOUTH: if (DrunkardPosition < Columns * (Rows - 1)) { return (DrunkardPosition + Columns); }
+							break;
+	case EDirection::WEST:	if (DrunkardPosition % Columns > 0) { return (DrunkardPosition - 1); }
+							break;
 	default: break;
 	}
-
-	// debug catch, should never occur
-	return StartingPosition;
+	
+	// Catch for if the drunkard cannot move in the intended direction
+	return DrunkardPosition;
 }
 
 // Called to populate the world
 bool ACityGenerator::GenerateCity()
 {
+	float BuildingWidth = CityBuilding->GetBoundingBox().GetSize().X;
+	
 	// We now loop through the population grid and put a building in each 'true' square
 	for (int32 GridSquare = 0; GridSquare < PopulationGrid.Num(); ++GridSquare)
 	{
-		FTransform BuildingTransform;
-		float BuildingWidth = CityBuilding->GetBounds().GetBox().GetSize().X;
-		
-		// We derive the location from the modulus of the rows and columns, against the grid position
-		BuildingTransform.SetLocation(FVector((GridSquare - (GridSquare % Columns)) * BuildingWidth,
-													(FMath::FloorToInt(GridSquare / Columns)) * BuildingWidth,
-													0.f));
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::FromInt(int32(PopulationGrid[GridSquare])));
+		if (PopulationGrid[GridSquare])
+		{
+			// This is the building width that is used to space out the grid
+			FTransform BuildingTransform;
 
-		// We randomise the rotation so the landscape varies
-		BuildingTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 3) * 90, 0.f).Quaternion());
+			// We derive the location from the modulus of the rows and columns, against the grid position
+			BuildingTransform.SetLocation(FVector(((GridSquare - (GridSquare % Columns)) * 30),
+														((FMath::FloorToInt(GridSquare / Columns)) * 50),
+														(0.f)));
 
-		// Then we add the building transform to the ISM instance array
-		CityISMComponent->AddInstance(BuildingTransform);
+			// Then we add the building transform to the ISM instance array
+			CityISMComponent->AddInstance(BuildingTransform);
+
+			// DEBUG
+			//FTransform debugTransform;
+			//CityISMComponent->GetInstanceTransform(GridSquare, debugTransform, false);
+			//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, debugTransform.ToHumanReadableString());
+		}
 	}
-
+	CityISMComponent->MarkRenderStateDirty();
 	return true;
 }
