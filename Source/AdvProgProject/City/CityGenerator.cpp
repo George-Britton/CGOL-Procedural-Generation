@@ -7,7 +7,7 @@
 ACityGenerator::ACityGenerator()
 {
 	// We don't want the generator to tick as after the city generation it is static
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	// We now construct the components and attach them all to the root
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
@@ -21,7 +21,11 @@ ACityGenerator::ACityGenerator()
 void ACityGenerator::OnConstruction(const FTransform& Transform)
 {
 	// Sets the static mesh to be instanced in the city
-	if (CityBuilding) CityISMComponent->SetStaticMesh(CityBuilding);
+	if (CityBuilding) 
+	{
+		CityISMComponent->SetStaticMesh(CityBuilding);
+		BuildingWidth = CityBuilding->GetBoundingBox().GetSize().X;
+	}
 
 	// Here we clamp the beginning of the box to one corner
 	CityBoundsBox->SetRelativeLocation(FVector(CityBoundsBox->GetScaledBoxExtent().X, CityBoundsBox->GetScaledBoxExtent().Y, 0));
@@ -89,7 +93,7 @@ int32 ACityGenerator::Step(int32 DrunkardPosition)
 // Called to populate the world
 bool ACityGenerator::GenerateCity()
 {
-	float BuildingWidth = CityBuilding->GetBoundingBox().GetSize().X;
+	//float BuildingWidth = CityBuilding->GetBoundingBox().GetSize().X;
 	
 	// We now loop through the population grid and put a building in each 'true' square
 	for (int32 GridSquare = 0; GridSquare < PopulationGrid.Num(); ++GridSquare)
@@ -100,18 +104,16 @@ bool ACityGenerator::GenerateCity()
 			// This is the building width that is used to space out the grid
 			FTransform BuildingTransform;
 
+			// We randomise the rotation so the landscape varies
+			//BuildingTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 3) * 90, 0.f).Quaternion());
+			
 			// We derive the location from the modulus of the rows and columns, against the grid position
-			BuildingTransform.SetLocation(FVector(((GridSquare - (GridSquare % Columns)) * 30),
-														((FMath::FloorToInt(GridSquare / Columns)) * 50),
-														(0.f)));
+			BuildingTransform.SetLocation(FVector((GridSquare % Columns) * BuildingWidth,
+				FMath::FloorToInt(GridSquare / Columns) * BuildingWidth,
+				0.f));
 
 			// Then we add the building transform to the ISM instance array
 			CityISMComponent->AddInstance(BuildingTransform);
-
-			// DEBUG
-			//FTransform debugTransform;
-			//CityISMComponent->GetInstanceTransform(GridSquare, debugTransform, false);
-			//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, debugTransform.ToHumanReadableString());
 		}
 	}
 	CityISMComponent->MarkRenderStateDirty();

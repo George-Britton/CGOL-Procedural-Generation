@@ -59,6 +59,10 @@ public:
 	UPROPERTY()
 		int32 Columns = 0;
 
+	// The width of the building mesh, used to align them to grid
+	UPROPERTY(EditAnywhere, Category = "City")
+		float BuildingWidth = 0.f;
+	
 	// The population grid and start/end positions of the city maze
 	UPROPERTY()
 		TArray<bool> PopulationGrid;
