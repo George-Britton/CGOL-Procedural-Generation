@@ -40,7 +40,17 @@ void ACityGenerator::BeginPlay()
 	Columns = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().X / CityBuilding->GetBounds().GetBox().GetSize().X);
 	Rows = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().Y / CityBuilding->GetBounds().GetBox().GetSize().Y);
 	PopulationGrid.Init(true, Rows * Columns);
+
+	// Now we generate a start and end position for the player's path by using the scale of the city, and choosing
+	// distant points. Our StartingPosition is derived by taking a random point in the grid,
+	// and the EndingPosition is the flip opposite point to the starting position.
+	StartingPosition = FMath::RandRange((Columns * BoarderWidth) + BoarderWidth, ((Rows * Columns) - 1) / 2);
+	EndingPosition = ((Rows * Columns) - 1) - StartingPosition;
 	PopulationGrid[StartingPosition] = false;
+
+	// Debug print strings
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Rows: " + FString::FromInt(Rows));
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Columns: " + FString::FromInt(Columns));
 	
 	// We then want to generate a random city
 	DrunkardWalk();
@@ -72,16 +82,19 @@ int32 ACityGenerator::Step(int32 DrunkardPosition)
 	EDirection NextStep = EDirection(FMath::RandRange(0, 3));
 	
 	// We then use a switch to implement a step in that direction,
-	// by turning the array into a 2d grid, and stepping through it
+	// by turning the array into a 2d grid, and stepping through it.
+	// This implementation means that we always have a BoarderWidth-layer
+	// boarder of buildings around the outside, and a guaranteed path
+	// from start to finish
 	switch(NextStep)
 	{
-	case EDirection::NORTH:	if (DrunkardPosition >= Columns) { return (DrunkardPosition - Columns); }
+	case EDirection::NORTH:	if (DrunkardPosition >= Columns * (BoarderWidth + 1)) { return (DrunkardPosition - Columns); }
 							break;
-	case EDirection::EAST:	if (DrunkardPosition % Columns != Columns - 1) { return (DrunkardPosition + 1); }
+	case EDirection::EAST:	if (DrunkardPosition % Columns != Columns - (BoarderWidth + 1)) { return (DrunkardPosition + 1); }
 							break;
-	case EDirection::SOUTH: if (DrunkardPosition < Columns * (Rows - 1)) { return (DrunkardPosition + Columns); }
+	case EDirection::SOUTH: if (DrunkardPosition < Columns * (Rows - (BoarderWidth + 1))) { return (DrunkardPosition + Columns); }
 							break;
-	case EDirection::WEST:	if (DrunkardPosition % Columns > 0) { return (DrunkardPosition - 1); }
+	case EDirection::WEST:	if (DrunkardPosition % Columns > BoarderWidth) { return (DrunkardPosition - 1); }
 							break;
 	default: break;
 	}
@@ -93,19 +106,16 @@ int32 ACityGenerator::Step(int32 DrunkardPosition)
 // Called to populate the world
 bool ACityGenerator::GenerateCity()
 {
-	//float BuildingWidth = CityBuilding->GetBoundingBox().GetSize().X;
-	
 	// We now loop through the population grid and put a building in each 'true' square
 	for (int32 GridSquare = 0; GridSquare < PopulationGrid.Num(); ++GridSquare)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::FromInt(int32(PopulationGrid[GridSquare])));
 		if (PopulationGrid[GridSquare])
 		{
 			// This is the building width that is used to space out the grid
 			FTransform BuildingTransform;
 
 			// We randomise the rotation so the landscape varies
-			//BuildingTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 3) * 90, 0.f).Quaternion());
+			BuildingTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 3) * 90, 0.f).Quaternion());
 			
 			// We derive the location from the modulus of the rows and columns, against the grid position
 			BuildingTransform.SetLocation(FVector((GridSquare % Columns) * BuildingWidth,

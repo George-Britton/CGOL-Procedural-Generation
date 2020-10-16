@@ -44,12 +44,6 @@ public:
 	// Sets default values for this actor's properties
 	ACityGenerator();
 
-	// 'CityBuilding' is a static mesh that 'CityISMComponent' uses for populating the city
-	UPROPERTY(EditAnywhere, Category = "City")
-		UStaticMesh* CityBuilding = nullptr;
-	UPROPERTY()
-		UInstancedStaticMeshComponent* CityISMComponent;
-
 	// This box component is used to set the bounds of the city,
 	// and the rows/columns are the size of the city grid
 	UPROPERTY(EditAnywhere, Category = "City")
@@ -59,16 +53,25 @@ public:
 	UPROPERTY()
 		int32 Columns = 0;
 
+	// 'CityBuilding' is a static mesh that 'CityISMComponent' uses for populating the city
+	UPROPERTY(EditAnywhere, Category = "City|Buildings")
+		UStaticMesh* CityBuilding = nullptr;
+	UPROPERTY()
+		UInstancedStaticMeshComponent* CityISMComponent;
+
 	// The width of the building mesh, used to align them to grid
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY(VisibleAnywhere, Category = "City|Buildings")
 		float BuildingWidth = 0.f;
+	// This is how many layers of buildings should surround the entire play area
+	UPROPERTY(EditAnywhere, Category = "City|Buildings")
+		int32 BoarderWidth = 2;
 	
 	// The population grid and start/end positions of the city maze
 	UPROPERTY()
 		TArray<bool> PopulationGrid;
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY()
 		int32 StartingPosition = 0;
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY()
 		int32 EndingPosition = 0;
 
 	// The event dispatcher for letting the player know it's ready to go
