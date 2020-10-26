@@ -7,29 +7,36 @@
 #include "Engine.h"
 #include "CityGenerator.generated.h"
 
-/* The road generation works on a binary 2d map to dictate
- * which road mesh should be used in its place. The grid works
- * by adding the total route numbers possible and using that mesh:
- *
- *	   |  1  |  
- *	--------------
- *	2  |  R  |  4
- *	--------------
- *	   |  8  |  
- */
-
 class ACityGenerator;
 // Event dispatcher for use after the city is generated and ready for the player
 DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnCityReady, ACityGenerator, OnCityReady);
 
+// Struct for the living rules of a cell, put into array for neighbour count
+USTRUCT(BlueprintType)
+struct FCellLifeRule
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+		bool DeadCellBecomesLive;
+
+	UPROPERTY(EditAnywhere)
+		bool AliveCellStaysAlive;
+
+	FCellLifeRule(bool Dead = false, bool Alive = false)
+	{
+		DeadCellBecomesLive = false;
+		AliveCellStaysAlive = false;
+	}
+};
+
 // Enum to be used for the cardinal directions for the drunkard to step
 UENUM(BlueprintType)
-enum class EDirection : uint8
+enum class EDifficulty : uint8
 {
-	NORTH UMETA(DisplayName = "North"),
-	EAST UMETA(DisplayName = "East"),
-	SOUTH UMETA(DisplayName = "South"),
-	WEST UMETA(DisplayName = "West"),
+	EASY UMETA(DisplayName = "Easy"),
+	NORMAL UMETA(DisplayName = "Normal"),
+	HARD UMETA(DisplayName = "Hard"),
 	MAX
 
 };
@@ -48,28 +55,34 @@ public:
 	// and the rows/columns are the size of the city grid
 	UPROPERTY(EditAnywhere, Category = "City")
 		UBoxComponent* CityBoundsBox;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "City")
 		int32 Rows = 0;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "City")
 		int32 Columns = 0;
 
-	// 'CityBuilding' is a static mesh that 'CityISMComponent' uses for populating the city
-	UPROPERTY(EditAnywhere, Category = "City|Buildings")
+	// Number of times we evolve the celluar automation algorithm
+	UPROPERTY(EditAnywhere, Category = "City")
+		int32 CityEvolutionGenerations = 3;
+	UPROPERTY(EditAnywhere, Category = "City")
+		TArray<FCellLifeRule> CellLifeRules;
+	
+	// 'CityBuilding' is the static mesh that 'CityBuildingISMComponent' uses for populating the city
+	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		UStaticMesh* CityBuilding = nullptr;
 	UPROPERTY()
-		UInstancedStaticMeshComponent* CityISMComponent;
+		UInstancedStaticMeshComponent* CityBuildingISMComponent;
 
 	// The width of the building mesh, used to align them to grid
-	UPROPERTY(VisibleAnywhere, Category = "City|Buildings")
+	UPROPERTY(VisibleAnywhere, Category = "City|Appearance")
 		float BuildingWidth = 0.f;
 	// This is how many layers of buildings should surround the entire play area
-	UPROPERTY(EditAnywhere, Category = "City|Buildings")
-		int32 BoarderWidth = 2;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+		int32 BorderWidth = 2;
 	
 	// The population grid and start/end positions of the city maze
 	UPROPERTY()
 		TArray<bool> PopulationGrid;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "City")
 		int32 StartingPosition = 0;
 	UPROPERTY()
 		int32 EndingPosition = 0;
@@ -85,10 +98,18 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// Called to implement the drunkard walk fractional brownian motion algorithm
-	void DrunkardWalk();
-	int32 Step(int32 DrunkardPosition);
+	// Called to create a randomly generated city
+	void GenerateCity();
 
+	// Counts the amounts of 'True' neighbours a grid cell has
+	int32 CountLivingNeighbours(int32 Cell, TArray<int32> RelativeNeighbours);
+
+	// Creates an array that stores the relative addresses of a cell's neighbours
+	TArray<int32> CreateNeighbourArray();
+	
+	// Returns whether or not the cell provided is in the boarder
+	bool IsWithinBorder(int32 Cell);
+	
 	// Called to populate the world
-	bool GenerateCity();
+	bool BuildCity();
 };
