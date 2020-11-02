@@ -48,28 +48,46 @@ void ACityGenerator::BeginPlay()
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Rows: " + FString::FromInt(Rows));
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Columns: " + FString::FromInt(Columns));
 	
-	// Now we generate a start and end position for the player's path by using the scale of the city, and choosing
-	// distant points. Our StartingPosition is derived by taking a random point in the grid,
-	// and the EndingPosition is the flip opposite point to the starting position.
-	// We loop through the do while loop to make sure that the start/end positions aren't stuck in the boarder
-	/*do
+	// Here we keep generating cities until one is walkable
+	do
 	{
-		StartingPosition = FMath::RandRange(((Rows * Columns) - 1) / 3, ((Rows * Columns) - 1) / 2);
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Cyan, FString::FromInt());
-	}
-	while (StartingPosition >= Columns * (BoarderWidth + 1) && StartingPosition % Columns != Columns - (BoarderWidth + 1)
-			&& StartingPosition < Columns * (Rows - (BoarderWidth + 1)) && StartingPosition % Columns > BoarderWidth);
-	*/
-	EndingPosition = ((Rows * Columns) - 1) - StartingPosition;
-	PopulationGrid[StartingPosition] = false;
-	
-	// We then want to generate a random city
-	GenerateCity();
+		FindEnds();
+		// We generate random noise for the first cell layout
+		InitialiseGrid();
+		// We then want to generate a random city
+		GenerateCity();
+	} while (!IsPathWalkable()); // We check our start and end position are connected	
 	
 	// We then generate the city, and declare it ready for the player
 	if (BuildCity())
 	{
 		OnCityReady.Broadcast();
+	}
+}
+
+// Finds a suitable start and end cell
+void ACityGenerator::FindEnds()
+{
+	// Now we generate a start and end position for the player's path by using the scale of the city, and choosing
+	// distant points. We loop through the do while loop to make sure that the start/end positions aren't stuck in the boarder
+	do
+	{
+		// Our starting cell is somewhere in the first quarter of the grid
+		StartingPosition = FMath::RandRange(0, FMath::FloorToInt(PopulationGrid.Num() / 4));
+		// Our ending cell is somewhere in the last quarter of the grid
+		EndingPosition = FMath::RandRange(FMath::FloorToInt(PopulationGrid.Num() * 0.75), PopulationGrid.Num());
+	} while (IsWithinBorder(StartingPosition) || IsWithinBorder(EndingPosition));
+}
+
+// Initialises the population grid to be evolved
+void ACityGenerator::InitialiseGrid()
+{
+	// We loop through the whole grid
+	for(int32 CellNumber = 0; CellNumber < PopulationGrid.Num(); ++CellNumber)
+	{
+		// We check the cell isn't a boarder cell, and use RNG to check our chance of cell being dead
+		if (!IsWithinBorder(CellNumber) && FMath::RandRange(0, 99) < CellLifePercent)
+			PopulationGrid[CellNumber] = false;
 	}
 }
 
@@ -105,7 +123,9 @@ void ACityGenerator::GenerateCity()
 		TemporaryArray.Empty();
 		TemporaryArray.Init(false, PopulationGrid.Num());
 	}
-	
+	// We then make sure the start and end cells are open
+	PopulationGrid[StartingPosition] = false;
+	PopulationGrid[EndingPosition] = false;
 }
 
 // Creates an array that stores the relative addresses of a cell's neighbours
@@ -159,6 +179,30 @@ bool ACityGenerator::IsWithinBorder(int32 Cell)
 	return false;
 }
 
+// Checks that there is a walkable path for the player
+bool ACityGenerator::IsPathWalkable()
+{
+	FloodArray = PopulationGrid;
+	TArray<int32> ConnectedCells = FloodFill(StartingPosition);
+	while (true)
+	{
+		if (ConnectedCells.Num() == 0) break;
+		ConnectedCells.Append(FloodFill(ConnectedCells.Pop()));
+	}
+
+	return !FloodArray[EndingPosition];
+}
+TArray<int32> ACityGenerator::FloodFill(int32 Cell)
+{
+	// We create an array to fill with open neighbours
+	TArray<int32> ConnectedCells;
+	if (FloodArray[Cell - 1] == false) { ConnectedCells.Add(Cell - 1); FloodArray[Cell - 1] = true; } // Left
+	if (FloodArray[Cell + 1] == false) { ConnectedCells.Add(Cell + 1); FloodArray[Cell + 1] = true; } // Right
+	if (FloodArray[Cell - Columns] == false) { ConnectedCells.Add(Cell - Columns); FloodArray[Cell - Columns] = true; } // Up
+	if (FloodArray[Cell + Columns] == false) { ConnectedCells.Add(Cell + Columns); FloodArray[Cell + Columns] = true; } // Down
+
+	return ConnectedCells;
+}
 
 // Called to populate the world
 bool ACityGenerator::BuildCity()

@@ -65,6 +65,9 @@ public:
 		int32 CityEvolutionGenerations = 3;
 	UPROPERTY(EditAnywhere, Category = "City")
 		TArray<FCellLifeRule> CellLifeRules;
+	// The percent chance our initial cell in PopGrid will die at the start
+	UPROPERTY(EditAnywhere, Category = "City")
+		int32 CellLifePercent = 50;
 	
 	// 'CityBuilding' is the static mesh that 'CityBuildingISMComponent' uses for populating the city
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
@@ -84,8 +87,12 @@ public:
 		TArray<bool> PopulationGrid;
 	UPROPERTY(EditAnywhere, Category = "City")
 		int32 StartingPosition = 0;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "City")
 		int32 EndingPosition = 0;
+
+	// A grid used to flood fill in order to check for a walkable path
+	UPROPERTY()
+		TArray<bool> FloodArray;
 
 	// The event dispatcher for letting the player know it's ready to go
 	UPROPERTY(BlueprintAssignable, Category = "City")
@@ -98,6 +105,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Finds a suitable start and end cell
+	void FindEnds();
+
+	// Initialises the population grid to be evolved
+	void InitialiseGrid();
+	
 	// Called to create a randomly generated city
 	void GenerateCity();
 
@@ -109,6 +122,10 @@ protected:
 	
 	// Returns whether or not the cell provided is in the boarder
 	bool IsWithinBorder(int32 Cell);
+
+	// Checks that there is a walkable path for the player
+	bool IsPathWalkable();
+	TArray<int32> FloodFill(int32 Cell);
 	
 	// Called to populate the world
 	bool BuildCity();
