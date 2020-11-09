@@ -54,15 +54,15 @@ public:
 	// This box component is used to set the bounds of the city,
 	// and the rows/columns are the size of the city grid
 	UPROPERTY(EditAnywhere, Category = "City")
-		UBoxComponent* CityBoundsBox;
-	UPROPERTY(VisibleAnywhere, Category = "City")
+		UBoxComponent* CityBoundsBox = nullptr;
+	UPROPERTY()
 		int32 Rows = 0;
-	UPROPERTY(VisibleAnywhere, Category = "City")
+	UPROPERTY()
 		int32 Columns = 0;
 
-	// Number of times we evolve the celluar automation algorithm
+	// Number of times we evolve the cellular automation algorithm
 	UPROPERTY(EditAnywhere, Category = "City")
-		int32 CityEvolutionGenerations = 3;
+		int32 CityEvolutionGenerations = 6;
 	UPROPERTY(EditAnywhere, Category = "City")
 		TArray<FCellLifeRule> CellLifeRules;
 	// The percent chance our initial cell in PopGrid will die at the start
@@ -73,11 +73,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		UStaticMesh* CityBuilding = nullptr;
 	UPROPERTY()
-		UInstancedStaticMeshComponent* CityBuildingISMComponent;
+		UInstancedStaticMeshComponent* CityBuildingISMComponent = nullptr;
 
-	// The width of the building mesh, used to align them to grid
-	UPROPERTY(VisibleAnywhere, Category = "City|Appearance")
-		float BuildingWidth = 0.f;
+	// These variables are used to populate the ending tile of the grid
+	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+		USkeletalMesh* HelicopterMesh = nullptr;
+	UPROPERTY()
+		USkeletalMeshComponent* HelicopterMeshComponent = nullptr;
+	UPROPERTY()
+		UBoxComponent* EndingBox = nullptr;
+	
 	// This is how many layers of buildings should surround the entire play area
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		int32 BorderWidth = 2;
@@ -85,9 +90,9 @@ public:
 	// The population grid and start/end positions of the city maze
 	UPROPERTY()
 		TArray<bool> PopulationGrid;
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY()
 		int32 StartingPosition = 0;
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY()
 		int32 EndingPosition = 0;
 
 	// A grid used to flood fill in order to check for a walkable path
@@ -122,6 +127,8 @@ protected:
 	
 	// Returns whether or not the cell provided is in the boarder
 	bool IsWithinBorder(int32 Cell);
+	// Return whether or not the cell is out of bounds
+	bool IsOutOfBounds(int32 Cell);
 
 	// Checks that there is a walkable path for the player
 	bool IsPathWalkable();
@@ -129,4 +136,7 @@ protected:
 	
 	// Called to populate the world
 	bool BuildCity();
+
+	// Sets up the helicopter ending space
+	void CreateEnding(float BuildingWidth);
 };
