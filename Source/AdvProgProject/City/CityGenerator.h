@@ -10,6 +10,8 @@
 class ACityGenerator;
 // Event dispatcher for use after the city is generated and ready for the player
 DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnCityReady, ACityGenerator, OnCityReady);
+// Event dispatcher for when the player overlaps the ending box
+DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnPlayerReachEnd, ACityGenerator, OnPlayerReachEnd);
 
 // Struct for the living rules of a cell, put into array for neighbour count
 USTRUCT(BlueprintType)
@@ -101,6 +103,9 @@ public:
 	// The event dispatcher for letting the player know it's ready to go
 	UPROPERTY(BlueprintAssignable, Category = "City")
 		FOnCityReady OnCityReady;
+	// The event dispatcher for when the player has overlapped with the ending box
+	UPROPERTY(BlueprintAssignable, Category = "City")
+		FOnPlayerReachEnd OnPlayerReachEnd;
 
 protected:
 	// Called whenever a value is changed
@@ -108,6 +113,9 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Called when an actor overlaps with this actor
+	virtual void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	// Finds a suitable start and end cell
 	void FindEnds();

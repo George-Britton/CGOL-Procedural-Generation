@@ -37,6 +37,8 @@ void ACityGenerator::OnConstruction(const FTransform& Transform)
 		HelicopterMeshComponent->SetRelativeRotation(FRotator(0, 45, 0));
 	}
 
+	EndingBox->SetHiddenInGame(false);
+
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
 }
@@ -64,6 +66,17 @@ void ACityGenerator::BeginPlay()
 	{
 		OnCityReady.Broadcast();
 	}
+
+	
+	// We bind the end box's overlap to the OnComponentBeginOverlap function
+	EndingBox->OnComponentBeginOverlap.AddDynamic(this, &ACityGenerator::OnComponentBeginOverlap);
+}
+
+// Called when an actor overlaps with this actor
+void ACityGenerator::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Emerald, "PLAYER AT END");
+	if (OverlappedComponent == EndingBox && OtherActor->GetName() == "Player") OnPlayerReachEnd.Broadcast();
 }
 
 // Finds a suitable start and end cell
