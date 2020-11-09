@@ -51,14 +51,11 @@ public:
 	// Sets default values for this actor's properties
 	ACityGenerator();
 
-	// This box component is used to set the bounds of the city,
-	// and the rows/columns are the size of the city grid
+	// The rows and columns are used to set the size of the grid
 	UPROPERTY(EditAnywhere, Category = "City")
-		UBoxComponent* CityBoundsBox = nullptr;
-	UPROPERTY()
-		int32 Rows = 0;
-	UPROPERTY()
-		int32 Columns = 0;
+		int32 Rows = 50;
+	UPROPERTY(EditAnywhere, Category = "City")
+		int32 Columns = 50;
 
 	// Number of times we evolve the cellular automation algorithm
 	UPROPERTY(EditAnywhere, Category = "City")
@@ -80,6 +77,8 @@ public:
 		USkeletalMesh* HelicopterMesh = nullptr;
 	UPROPERTY()
 		USkeletalMeshComponent* HelicopterMeshComponent = nullptr;
+	UPROPERTY()
+		float HelicopterScale = 0.7f;
 	UPROPERTY()
 		UBoxComponent* EndingBox = nullptr;
 	

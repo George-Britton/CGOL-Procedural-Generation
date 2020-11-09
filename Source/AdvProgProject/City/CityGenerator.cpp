@@ -13,12 +13,11 @@ ACityGenerator::ACityGenerator()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
 	CityBuildingISMComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("City Building Instanced Static Mesh Component"));
 	HelicopterMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Helicopter Mesh Component"));
-	CityBoundsBox = CreateDefaultSubobject<UBoxComponent>(TEXT("City Bounds Box"));
 	EndingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Ending Box"));
 	CityBuildingISMComponent->SetupAttachment(this->RootComponent);
 	HelicopterMeshComponent->SetupAttachment(this->RootComponent);
-	CityBoundsBox->SetupAttachment(this->RootComponent);
 	EndingBox->SetupAttachment(this->RootComponent);
+	HelicopterMeshComponent->SetCollisionProfileName("Vehicle");
 }
 
 // Called whenever a value changes
@@ -31,13 +30,15 @@ void ACityGenerator::OnConstruction(const FTransform& Transform)
 	if (CityBuilding) CityBuildingISMComponent->SetStaticMesh(CityBuilding);
 
 	// Sets the helicopter mesh for the ending
-	if (HelicopterMesh) HelicopterMeshComponent->SetSkeletalMesh(HelicopterMesh);
+	if (HelicopterMesh)
+	{
+		HelicopterMeshComponent->SetSkeletalMesh(HelicopterMesh);
+		HelicopterMeshComponent->SetRelativeScale3D(FVector(HelicopterScale));
+		HelicopterMeshComponent->SetRelativeRotation(FRotator(0, 45, 0));
+	}
 
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
-
-	// Here we clamp the beginning of the box to one corner
-	CityBoundsBox->SetRelativeLocation(FVector(CityBoundsBox->GetScaledBoxExtent().X, CityBoundsBox->GetScaledBoxExtent().Y, 0));
 }
 
 // Called when the game starts or when spawned
@@ -46,8 +47,6 @@ void ACityGenerator::BeginPlay()
 	Super::BeginPlay();
 
 	// Derives the size of the city grid by dividing the box bounds by the size of the building
-	Columns = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().X / CityBuilding->GetBounds().GetBox().GetSize().X);
-	Rows = FMath::FloorToInt(CityBoundsBox->GetScaledBoxExtent().Y / CityBuilding->GetBounds().GetBox().GetSize().Y);
 	PopulationGrid.Init(true, Rows * Columns);
 
 	// Here we keep generating cities until one is walkable
@@ -196,21 +195,32 @@ bool ACityGenerator::IsOutOfBounds(int32 Cell)
 // Checks that there is a walkable path for the player
 bool ACityGenerator::IsPathWalkable()
 {
+	// First we copy the population grid so we can fill it as we go without ruining it
 	FloodArray = PopulationGrid;
+	// We initiate the connected cell queue with the neighbours of the starting position
 	TArray<int32> ConnectedCells = FloodFill(StartingPosition);
+	// We set a flag for whether the path is walkable
 	bool IsWalkable = false;
+
+	// We keep looping through the connected cell queue
 	while (true)
 	{
+		// If we run out of cells to connect, we have no walkable path, so we break and return
 		if (ConnectedCells.Num() == 0) break;
+
 		int32 NextCell = ConnectedCells.Pop();
+		// If we're on the ending cell, we have a walkable path, so we set IsWalkable to true, and break
 		if (NextCell == EndingPosition)
 		{
 			IsWalkable = true;
 			break;
 		}
+		
+		// We then go to the next cell in the queue and add their open neighbours to the queue
 		ConnectedCells.Append(FloodFill(NextCell));
 	}
 
+	// We return whether or not there is a walkable path
 	return IsWalkable;
 }
 TArray<int32> ACityGenerator::FloodFill(int32 Cell)
