@@ -160,7 +160,8 @@ int32 ACityGenerator::CountLivingNeighbours(int32 Cell, TArray<int32> RelativeNe
 		// If it's within the border, add 1 and continue
 		if (IsWithinBorder(Cell + RelativeNeighbours[NeighbourLooper])) { ++LivingNeighbours; continue; }
 		// If it's within the bounds of the city, and the neighbour is alive, add 1
-		if (!IsOutOfBounds(Cell)) if (PopulationGrid[Cell + RelativeNeighbours[NeighbourLooper]]) ++LivingNeighbours;
+		if (!IsOutOfBounds(Cell + RelativeNeighbours[NeighbourLooper]))
+			if (PopulationGrid[Cell + RelativeNeighbours[NeighbourLooper]]) ++LivingNeighbours;
 	}
 
 	// We then return the results
@@ -216,13 +217,13 @@ TArray<int32> ACityGenerator::FloodFill(int32 Cell)
 {
 	// We create an array to fill with open neighbours
 	TArray<int32> ConnectedCells;
-	if (!IsOutOfBounds(Cell))
+	if (!IsOutOfBounds(Cell - 1))
 		if (FloodArray[Cell - 1] == false) { ConnectedCells.Add(Cell - 1); FloodArray[Cell - 1] = true; } // Left
-	if (!IsOutOfBounds(Cell))
+	if (!IsOutOfBounds(Cell + 1))
 		if (FloodArray[Cell + 1] == false) { ConnectedCells.Add(Cell + 1); FloodArray[Cell + 1] = true; } // Right
-	if (!IsOutOfBounds(Cell))
+	if (!IsOutOfBounds(Cell - Columns))
 		if (FloodArray[Cell - Columns] == false) { ConnectedCells.Add(Cell - Columns); FloodArray[Cell - Columns] = true; } // Up
-	if (!IsOutOfBounds(Cell))
+	if (!IsOutOfBounds(Cell + Columns))
 		if (FloodArray[Cell + Columns] == false) { ConnectedCells.Add(Cell + Columns); FloodArray[Cell + Columns] = true; } // Down
 
 	return ConnectedCells;
