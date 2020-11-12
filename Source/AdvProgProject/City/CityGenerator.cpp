@@ -293,10 +293,7 @@ void ACityGenerator::CreateEnding(float BuildingWidth)
 	// We then add the relative position from the index and column count
 	EndSpawnLocation.X += (EndingPosition % Columns) * BuildingWidth;
 	EndSpawnLocation.Y += FMath::FloorToInt(EndingPosition / Columns) * BuildingWidth;
-
-	// We then add half of the building width to each to centre the position in the grid cell
-	//EndSpawnLocation.X += BuildingWidth / 2;
-	//EndSpawnLocation.Y += BuildingWidth / 2;
+	EndSpawnLocation.Z += 3000.f;
 
 	// We put the helicopter there and set the collision box around it
 	HelicopterMeshComponent->SetWorldLocation(EndSpawnLocation);
