@@ -2,6 +2,7 @@
 
 
 #include "CityGenerator.h"
+#include "Helicopter.h"
 
 // Sets default values
 ACityGenerator::ACityGenerator()
@@ -12,12 +13,7 @@ ACityGenerator::ACityGenerator()
 	// We now construct the components and attach them all to the root
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
 	CityBuildingISMComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("City Building Instanced Static Mesh Component"));
-	HelicopterMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Helicopter Mesh Component"));
-	EndingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Ending Box"));
 	CityBuildingISMComponent->SetupAttachment(this->RootComponent);
-	HelicopterMeshComponent->SetupAttachment(this->RootComponent);
-	EndingBox->SetupAttachment(this->RootComponent);
-	HelicopterMeshComponent->SetCollisionProfileName("Vehicle");
 }
 
 // Called whenever a value changes
@@ -28,16 +24,6 @@ void ACityGenerator::OnConstruction(const FTransform& Transform)
 	
 	// Sets the static meshes to be instanced in the city
 	if (CityBuilding) CityBuildingISMComponent->SetStaticMesh(CityBuilding);
-
-	// Sets the helicopter mesh for the ending
-	if (HelicopterMesh)
-	{
-		HelicopterMeshComponent->SetSkeletalMesh(HelicopterMesh);
-		HelicopterMeshComponent->SetRelativeScale3D(FVector(HelicopterScale));
-		HelicopterMeshComponent->SetRelativeRotation(FRotator(0, 45, 0));
-	}
-
-	EndingBox->SetHiddenInGame(false);
 
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
@@ -66,17 +52,6 @@ void ACityGenerator::BeginPlay()
 	{
 		OnCityReady.Broadcast();
 	}
-
-	
-	// We bind the end box's overlap to the OnComponentBeginOverlap function
-	EndingBox->OnComponentBeginOverlap.AddDynamic(this, &ACityGenerator::OnComponentBeginOverlap);
-}
-
-// Called when an actor overlaps with this actor
-void ACityGenerator::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Emerald, "PLAYER AT END");
-	if (OverlappedComponent == EndingBox && OtherActor->GetName() == "Player") OnPlayerReachEnd.Broadcast();
 }
 
 // Finds a suitable start and end cell
@@ -288,15 +263,15 @@ bool ACityGenerator::BuildCity()
 void ACityGenerator::CreateEnding(float BuildingWidth)
 {
 	// We first initialise the ending location
-	FVector EndSpawnLocation = HelicopterMeshComponent->GetComponentLocation();
+	FActorSpawnParameters HeliSpawnParams;
+	FVector EndSpawnLocation = this->GetActorLocation();
 
 	// We then add the relative position from the index and column count
 	EndSpawnLocation.X += (EndingPosition % Columns) * BuildingWidth;
 	EndSpawnLocation.Y += FMath::FloorToInt(EndingPosition / Columns) * BuildingWidth;
-	EndSpawnLocation.Z += 3000.f;
+	EndSpawnLocation.Z += HelicopterMesh->GetBounds().BoxExtent.Z / 2;
 
-	// We put the helicopter there and set the collision box around it
-	HelicopterMeshComponent->SetWorldLocation(EndSpawnLocation);
-	EndingBox->SetWorldLocation(EndSpawnLocation);
-	EndingBox->SetWorldScale3D(HelicopterMesh->GetBounds().GetBox().GetSize() * 2);
+	// We put the helicopter there and set the mesh
+	AHelicopter* Helicopter = GetWorld()->SpawnActor<AHelicopter>(AHelicopter::StaticClass(), EndSpawnLocation, FRotator::ZeroRotator, HeliSpawnParams);
+	Helicopter->InitialiseMeshAndBounds(HelicopterMesh);
 }

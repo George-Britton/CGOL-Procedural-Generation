@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine.h"
 #include "CityGenerator.generated.h"
@@ -10,8 +9,6 @@
 class ACityGenerator;
 // Event dispatcher for use after the city is generated and ready for the player
 DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnCityReady, ACityGenerator, OnCityReady);
-// Event dispatcher for when the player overlaps the ending box
-DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnPlayerReachEnd, ACityGenerator, OnPlayerReachEnd);
 
 // Struct for the living rules of a cell, put into array for neighbour count
 USTRUCT(BlueprintType)
@@ -77,12 +74,8 @@ public:
 	// These variables are used to populate the ending tile of the grid
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		USkeletalMesh* HelicopterMesh = nullptr;
-	UPROPERTY()
-		USkeletalMeshComponent* HelicopterMeshComponent = nullptr;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		float HelicopterScale = 0.7f;
-	UPROPERTY()
-		UBoxComponent* EndingBox = nullptr;
 	
 	// This is how many layers of buildings should surround the entire play area
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
@@ -103,9 +96,6 @@ public:
 	// The event dispatcher for letting the player know it's ready to go
 	UPROPERTY(BlueprintAssignable, Category = "City")
 		FOnCityReady OnCityReady;
-	// The event dispatcher for when the player has overlapped with the ending box
-	UPROPERTY(BlueprintAssignable, Category = "City")
-		FOnPlayerReachEnd OnPlayerReachEnd;
 
 protected:
 	// Called whenever a value is changed
@@ -113,9 +103,6 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	// Called when an actor overlaps with this actor
-	virtual void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	// Finds a suitable start and end cell
 	void FindEnds();
