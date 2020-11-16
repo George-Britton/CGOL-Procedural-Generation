@@ -51,19 +51,22 @@ public:
 	ACityGenerator();
 
 	// The rows and columns are used to set the size of the grid
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		int32 Rows = 50;
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		int32 Columns = 50;
 
 	// Number of times we evolve the cellular automation algorithm
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		int32 CityEvolutionGenerations = 6;
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		TArray<FCellLifeRule> CellLifeRules;
 	// The percent chance our initial cell in PopGrid will die at the start
-	UPROPERTY(EditAnywhere, Category = "City")
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		int32 CellLifePercent = 50;
+	// This is how many layers of buildings should surround the entire play area
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
+		int32 BorderWidth = 2;
 	
 	// 'CityBuilding' is the static mesh that 'CityBuildingISMComponent' uses for populating the city
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
@@ -71,15 +74,19 @@ public:
 	UPROPERTY()
 		UInstancedStaticMeshComponent* CityBuildingISMComponent = nullptr;
 
+	// These populate the city streets with random props
+	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+		TArray<UStaticMesh*> PropArray;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+		float PropSpawnProbability = 20.f;
+	UPROPERTY()
+		TArray<UInstancedStaticMeshComponent*> PropComponentArray;
+	
 	// These variables are used to populate the ending tile of the grid
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		USkeletalMesh* HelicopterMesh = nullptr;
 	UPROPERTY(EditAnywhere, Category = "City|Appearance")
 		float HelicopterScale = 0.7f;
-	
-	// This is how many layers of buildings should surround the entire play area
-	UPROPERTY(EditAnywhere, Category = "City|Appearance")
-		int32 BorderWidth = 2;
 	
 	// The population grid and start/end positions of the city maze
 	UPROPERTY()
@@ -104,6 +111,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Called to create the city prop components
+	void CreatePropComponents();
+	
 	// Finds a suitable start and end cell
 	void FindEnds();
 
@@ -130,6 +140,8 @@ protected:
 	
 	// Called to populate the world
 	bool BuildCity();
+	void PlaceBuilding(FTransform PlacementTransform, float BuildingWidth);
+	void PlaceProp(FTransform PlacementTransform, float BuildingWidth);
 
 	// Sets up the helicopter ending space
 	void CreateEnding(float BuildingWidth);

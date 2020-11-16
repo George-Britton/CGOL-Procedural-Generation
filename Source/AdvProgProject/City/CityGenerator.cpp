@@ -21,6 +21,9 @@ void ACityGenerator::OnConstruction(const FTransform& Transform)
 {
 	// We clamp the border width to be a minimum of 0
 	BorderWidth = FMath::Clamp(BorderWidth, 0, BorderWidth);
+
+	// We also clamp the prop spawn percent to between 0 and 100
+	PropSpawnProbability = FMath::Clamp(PropSpawnProbability, 0.f, 100.f);
 	
 	// Sets the static meshes to be instanced in the city
 	if (CityBuilding) CityBuildingISMComponent->SetStaticMesh(CityBuilding);
@@ -34,6 +37,9 @@ void ACityGenerator::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// We create the prop arrays for city debris population
+	if (PropArray.Num()) CreatePropComponents();
+	
 	// Derives the size of the city grid by dividing the box bounds by the size of the building
 	PopulationGrid.Init(true, Rows * Columns);
 
@@ -51,6 +57,23 @@ void ACityGenerator::BeginPlay()
 	if (BuildCity())
 	{
 		OnCityReady.Broadcast();
+	}
+}
+
+// Called to create the city prop components
+void ACityGenerator::CreatePropComponents()
+{
+	// We initiate the array to be as big as the prop array
+	PropComponentArray.Init(nullptr, PropArray.Num());
+
+	// Then for each entry, we construct a component and add it to the root
+	for (int32 PropLooper = 0; PropLooper < PropArray.Num(); ++PropLooper)
+	{
+		PropComponentArray[PropLooper] = Cast<UInstancedStaticMeshComponent>(StaticConstructObject_Internal(UInstancedStaticMeshComponent::StaticClass(), this));
+		PropComponentArray[PropLooper]->RegisterComponent();
+		PropComponentArray[PropLooper]->SetupAttachment(this->RootComponent);
+		PropComponentArray[PropLooper]->SetStaticMesh(PropArray[PropLooper]);
+		PropComponentArray[PropLooper]->SetWorldLocation(this->GetActorLocation());
 	}
 }
 
@@ -236,27 +259,40 @@ bool ACityGenerator::BuildCity()
 	// We now loop through the population grid and put a building in each 'true' square
 	for (int32 GridSquare = 0; GridSquare < PopulationGrid.Num(); ++GridSquare)
 	{
-		// We find out whether we need to add a building
-		if (PopulationGrid[GridSquare])
-		{
-			// This is the building width that is used to space out the grid
-			FTransform GridTransform;
-
-			// We randomise the rotation so the landscape varies
-			GridTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 3) * 90, 0.f).Quaternion());
-
-			// We derive the location from the modulus of the rows and columns, against the grid position
-			GridTransform.SetLocation(FVector((GridSquare % Columns) * BuildingWidth,
-				FMath::FloorToInt(GridSquare / Columns) * BuildingWidth,
-				0.f));
-			
-			// Then we add the building transform to the ISM instance array
-			CityBuildingISMComponent->AddInstance(GridTransform);
-		}
+		FTransform GridTransform;
 		
+		// We derive the location from the modulus of the rows and columns, against the grid position
+		GridTransform.SetLocation(FVector((GridSquare % Columns) * BuildingWidth,
+			FMath::FloorToInt(GridSquare / Columns) * BuildingWidth,
+			0.f));
+		
+		// We find out whether we need to add a building
+		if (PopulationGrid[GridSquare]) PlaceBuilding(GridTransform, BuildingWidth);
+		else if (FMath::RandRange(0.f, 99.9f) < PropSpawnProbability) PlaceProp(GridTransform, BuildingWidth);
 	}
 	CreateEnding(BuildingWidth);
 	return true;
+}
+void ACityGenerator::PlaceBuilding(FTransform PlacementTransform, float BuildingWidth)
+{
+	// We randomise the rotation so the landscape varies
+	PlacementTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 3) * 90, 0.f).Quaternion());
+
+	// Then we add the building transform to the ISM instance array
+	CityBuildingISMComponent->AddInstance(PlacementTransform);
+}
+void ACityGenerator::PlaceProp(FTransform PlacementTransform, float BuildingWidth)
+{
+	// We randomly choose which prop will be placed
+	int32 ChosenProp = FMath::RandRange(0, PropArray.Num() - 1);
+
+	// We randomise the rotation so the props vary
+	PlacementTransform.SetRotation(FRotator(0.f, FMath::RandRange(0, 359), 0.f).Quaternion());
+
+	// TODO: Randomise positioning
+	
+	// We then place the prop
+	PropComponentArray[ChosenProp]->AddInstance(PlacementTransform);
 }
 
 // Sets up the helicopter ending space
@@ -269,9 +305,9 @@ void ACityGenerator::CreateEnding(float BuildingWidth)
 	// We then add the relative position from the index and column count
 	EndSpawnLocation.X += (EndingPosition % Columns) * BuildingWidth;
 	EndSpawnLocation.Y += FMath::FloorToInt(EndingPosition / Columns) * BuildingWidth;
-	EndSpawnLocation.Z += HelicopterMesh->GetBounds().BoxExtent.Z / 2;
 
 	// We put the helicopter there and set the mesh
 	AHelicopter* Helicopter = GetWorld()->SpawnActor<AHelicopter>(AHelicopter::StaticClass(), EndSpawnLocation, FRotator::ZeroRotator, HeliSpawnParams);
+	Helicopter->SetActorScale3D(FVector(HelicopterScale));
 	Helicopter->InitialiseMeshAndBounds(HelicopterMesh);
 }
