@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine.h"
 #include "CityGenerator.generated.h"
+#include "Landscape.h"
 
 class ACityGenerator;
 // Event dispatcher for use after the city is generated and ready for the player
@@ -69,23 +70,47 @@ public:
 		int32 BorderWidth = 2;
 	
 	// 'CityBuilding' is the static mesh that 'CityBuildingISMComponent' uses for populating the city
-	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Buildings")
 		UStaticMesh* CityBuilding = nullptr;
 	UPROPERTY()
 		UInstancedStaticMeshComponent* CityBuildingISMComponent = nullptr;
 
-	// These populate the city streets with random props
-	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+	// These populate the city streets with random props and a road
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Props")
 		TArray<UStaticMesh*> PropArray;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Props")
 		float PropSpawnProbability = 20.f;
 	UPROPERTY()
 		TArray<UInstancedStaticMeshComponent*> PropComponentArray;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Road")
+		UStaticMesh* RoadMesh = nullptr;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Road")
+		UMaterial* RoadMaterial = nullptr;
+	UPROPERTY()
+		UInstancedStaticMeshComponent* RoadComponent = nullptr;
+
+	// These populate the forest outside the city
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+		TArray<UStaticMesh*> TreeArray;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+		uint32 ForestDensity = 25;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+		float ForestDistance = 50000.f;
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+		float ForestLeniency = 2.f;
+	UPROPERTY()
+		TArray<UInstancedStaticMeshComponent*> TreeComponentArray;
+
+	// This creates the sea
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|Sea")
+		UMaterial* SeaMaterial = nullptr;
+	UPROPERTY()
+		ALandscape* SeaLandscape = nullptr;
 	
 	// These variables are used to populate the ending tile of the grid
-	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Helicopter")
 		USkeletalMesh* HelicopterMesh = nullptr;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance")
+	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Helicopter")
 		float HelicopterScale = 0.7f;
 	
 	// The population grid and start/end positions of the city maze
@@ -111,8 +136,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// Called to create the city prop components
+	// Called to create the city prop components and forest components
 	void CreatePropComponents();
+	void CreateForestComponents();
 	
 	// Finds a suitable start and end cell
 	void FindEnds();
@@ -142,7 +168,16 @@ protected:
 	bool BuildCity();
 	void PlaceBuilding(FTransform PlacementTransform, float BuildingWidth);
 	void PlaceProp(FTransform PlacementTransform, float BuildingWidth);
+	void PlaceRoad(FTransform PlacementTransform, float BuildingWidth);
 
+	// Called to populate the forest outside the city
+	void PlantTrees(float BuildingWidth);
+	// Checks that the tree is outside the city, but not too far
+	bool ValidateTreeDistance(FVector TreeLocation, float BuildingWidth);
+
+	// Called to create the sea landscape
+	void CreateSea();
+	
 	// Sets up the helicopter ending space
 	void CreateEnding(float BuildingWidth);
 };
