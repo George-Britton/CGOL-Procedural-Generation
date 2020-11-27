@@ -37,6 +37,8 @@ public:
 	// Receives the command to create the forest
 	void ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InForestDensity, float InForestDistance, float InForestLeniency, float BuildingWidth, uint32 InRows, uint32 InColumns);
 
+private:
+	
 	// Called to populate the forest outside the city
 	void PlantTrees(float BuildingWidth);
 	// Checks that the tree is outside the city, but not too far

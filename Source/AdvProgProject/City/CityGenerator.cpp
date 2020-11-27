@@ -2,10 +2,11 @@
 
 
 #include "CityGenerator.h"
-
 #include "Forest.h"
 #include "Helicopter.h"
+#include "Sea.h"
 
+// DEFAULT
 // Sets default values
 ACityGenerator::ACityGenerator()
 {
@@ -19,7 +20,6 @@ ACityGenerator::ACityGenerator()
 	CityBuildingISMComponent->SetupAttachment(this->RootComponent);
 	RoadComponent->SetupAttachment(this->RootComponent);
 }
-
 // Called whenever a value changes
 void ACityGenerator::OnConstruction(const FTransform& Transform)
 {
@@ -37,7 +37,6 @@ void ACityGenerator::OnConstruction(const FTransform& Transform)
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
 }
-
 // Called when the game starts or when spawned
 void ACityGenerator::BeginPlay()
 {
@@ -66,6 +65,7 @@ void ACityGenerator::BeginPlay()
 	}
 }
 
+// GENERATION
 // Called to create the city prop components
 void ACityGenerator::CreatePropComponents()
 {
@@ -82,7 +82,6 @@ void ACityGenerator::CreatePropComponents()
 		PropComponentArray[PropLooper]->SetWorldLocation(this->GetActorLocation());
 	}
 }
-
 // Finds a suitable start and end cell
 void ACityGenerator::FindEnds()
 {
@@ -96,7 +95,6 @@ void ACityGenerator::FindEnds()
 		EndingPosition = FMath::RandRange(FMath::FloorToInt(PopulationGrid.Num() * 0.75), PopulationGrid.Num());
 	} while (IsWithinBorder(StartingPosition) || IsWithinBorder(EndingPosition));
 }
-
 // Initialises the population grid to be evolved
 void ACityGenerator::InitialiseGrid()
 {
@@ -108,7 +106,6 @@ void ACityGenerator::InitialiseGrid()
 			PopulationGrid[CellNumber] = false;
 	}
 }
-
 // Called to create a randomly generated city
 void ACityGenerator::GenerateCity()
 {
@@ -145,7 +142,54 @@ void ACityGenerator::GenerateCity()
 	PopulationGrid[StartingPosition] = false;
 	PopulationGrid[EndingPosition] = false;
 }
+// Checks that there is a walkable path for the player
+bool ACityGenerator::IsPathWalkable()
+{
+	// First we copy the population grid so we can fill it as we go without ruining it
+	FloodArray = PopulationGrid;
+	// We initiate the connected cell queue with the neighbours of the starting position
+	TArray<int32> ConnectedCells = FloodFill(StartingPosition);
+	// We set a flag for whether the path is walkable
+	bool IsWalkable = false;
 
+	// We keep looping through the connected cell queue
+	while (true)
+	{
+		// If we run out of cells to connect, we have no walkable path, so we break and return
+		if (ConnectedCells.Num() == 0) break;
+
+		int32 NextCell = ConnectedCells.Pop();
+		// If we're on the ending cell, we have a walkable path, so we set IsWalkable to true, and break
+		if (NextCell == EndingPosition)
+		{
+			IsWalkable = true;
+			break;
+		}
+
+		// We then go to the next cell in the queue and add their open neighbours to the queue
+		ConnectedCells.Append(FloodFill(NextCell));
+	}
+
+	// We return whether or not there is a walkable path
+	return IsWalkable;
+}
+TArray<int32> ACityGenerator::FloodFill(int32 Cell)
+{
+	// We create an array to fill with open neighbours
+	TArray<int32> ConnectedCells;
+	if (!IsOutOfBounds(Cell - 1))
+		if (FloodArray[Cell - 1] == false) { ConnectedCells.Add(Cell - 1); FloodArray[Cell - 1] = true; } // Left
+	if (!IsOutOfBounds(Cell + 1))
+		if (FloodArray[Cell + 1] == false) { ConnectedCells.Add(Cell + 1); FloodArray[Cell + 1] = true; } // Right
+	if (!IsOutOfBounds(Cell - Columns))
+		if (FloodArray[Cell - Columns] == false) { ConnectedCells.Add(Cell - Columns); FloodArray[Cell - Columns] = true; } // Up
+	if (!IsOutOfBounds(Cell + Columns))
+		if (FloodArray[Cell + Columns] == false) { ConnectedCells.Add(Cell + Columns); FloodArray[Cell + Columns] = true; } // Down
+
+	return ConnectedCells;
+}
+
+// CELLULAR AUTOMATION
 // Creates an array that stores the relative addresses of a cell's neighbours
 TArray<int32> ACityGenerator::CreateNeighbourArray()
 {
@@ -162,8 +206,6 @@ TArray<int32> ACityGenerator::CreateNeighbourArray()
 
 	return RelativeNeighbourAddresses;
 }
-
-
 // Counts the amounts of 'True' neighbours a grid cell has
 int32 ACityGenerator::CountLivingNeighbours(int32 Cell, TArray<int32> RelativeNeighbours)
 {
@@ -183,7 +225,6 @@ int32 ACityGenerator::CountLivingNeighbours(int32 Cell, TArray<int32> RelativeNe
 	// We then return the results
 	return LivingNeighbours;
 }
-
 // Returns whether or not the cell provided is in the border
 bool ACityGenerator::IsWithinBorder(int32 Cell)
 {
@@ -209,53 +250,7 @@ bool ACityGenerator::IsOutOfBounds(int32 Cell)
 	return false;
 }
 
-// Checks that there is a walkable path for the player
-bool ACityGenerator::IsPathWalkable()
-{
-	// First we copy the population grid so we can fill it as we go without ruining it
-	FloodArray = PopulationGrid;
-	// We initiate the connected cell queue with the neighbours of the starting position
-	TArray<int32> ConnectedCells = FloodFill(StartingPosition);
-	// We set a flag for whether the path is walkable
-	bool IsWalkable = false;
-
-	// We keep looping through the connected cell queue
-	while (true)
-	{
-		// If we run out of cells to connect, we have no walkable path, so we break and return
-		if (ConnectedCells.Num() == 0) break;
-
-		int32 NextCell = ConnectedCells.Pop();
-		// If we're on the ending cell, we have a walkable path, so we set IsWalkable to true, and break
-		if (NextCell == EndingPosition)
-		{
-			IsWalkable = true;
-			break;
-		}
-		
-		// We then go to the next cell in the queue and add their open neighbours to the queue
-		ConnectedCells.Append(FloodFill(NextCell));
-	}
-
-	// We return whether or not there is a walkable path
-	return IsWalkable;
-}
-TArray<int32> ACityGenerator::FloodFill(int32 Cell)
-{
-	// We create an array to fill with open neighbours
-	TArray<int32> ConnectedCells;
-	if (!IsOutOfBounds(Cell - 1))
-		if (FloodArray[Cell - 1] == false) { ConnectedCells.Add(Cell - 1); FloodArray[Cell - 1] = true; } // Left
-	if (!IsOutOfBounds(Cell + 1))
-		if (FloodArray[Cell + 1] == false) { ConnectedCells.Add(Cell + 1); FloodArray[Cell + 1] = true; } // Right
-	if (!IsOutOfBounds(Cell - Columns))
-		if (FloodArray[Cell - Columns] == false) { ConnectedCells.Add(Cell - Columns); FloodArray[Cell - Columns] = true; } // Up
-	if (!IsOutOfBounds(Cell + Columns))
-		if (FloodArray[Cell + Columns] == false) { ConnectedCells.Add(Cell + Columns); FloodArray[Cell + Columns] = true; } // Down
-
-	return ConnectedCells;
-}
-
+// CITY POPULATION
 // Called to populate the world
 bool ACityGenerator::BuildCity()
 {
@@ -284,6 +279,7 @@ bool ACityGenerator::BuildCity()
 	// We then create the helicopter and forest
 	CreateHelicopter(BuildingWidth);
 	if (TreeArray.Num()) CreateForest(BuildingWidth);
+	if (SeaMaterial) CreateSea();
 	return true;
 }
 void ACityGenerator::PlaceBuilding(FTransform PlacementTransform, float BuildingWidth)
@@ -314,6 +310,20 @@ void ACityGenerator::PlaceRoad(FTransform PlacementTransform, float BuildingWidt
 	RoadComponent->AddInstance(PlacementTransform);
 }
 
+// CREATES EXTERNAL ACTORS
+// Constructs the sea by the side of the city
+void ACityGenerator::CreateSea()
+{
+	// We create a base spawn parameter for the sea
+	FActorSpawnParameters SpawnParams;
+
+	// Then we create the sea actor
+	ASea* Sea = GetWorld()->SpawnActor<ASea>(ASea::StaticClass(), this->GetTransform(), SpawnParams);
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, Sea->GetName()); // debug name getter
+
+	// Then we initialise the sea with its user-defined parameters
+	Sea->ReceiveCreateSea(SeaMaterial, SeaDistance);
+}
 // Sets up the forest outside the city
 void ACityGenerator::CreateForest(float BuildingWidth)
 {
@@ -326,7 +336,6 @@ void ACityGenerator::CreateForest(float BuildingWidth)
 	// And finally we initialise it with the user-defined parameters
 	Forest->ReceiveCreateForest(TreeArray, ForestDensity, ForestDistance, ForestLeniency, BuildingWidth, Rows, Columns);
 }
-
 // Sets up the helicopter ending space
 void ACityGenerator::CreateHelicopter(float BuildingWidth)
 {
