@@ -5,7 +5,6 @@
 #include "GameFramework/Actor.h"
 #include "Engine.h"
 #include "CityGenerator.generated.h"
-#include "Landscape.h"
 
 class ACityGenerator;
 // Event dispatcher for use after the city is generated and ready for the player
@@ -98,14 +97,6 @@ public:
 		float ForestDistance = 50000.f;
 	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
 		float ForestLeniency = 2.f;
-	UPROPERTY()
-		TArray<UInstancedStaticMeshComponent*> TreeComponentArray;
-
-	// This creates the sea
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Sea")
-		UMaterial* SeaMaterial = nullptr;
-	UPROPERTY()
-		ALandscape* SeaLandscape = nullptr;
 	
 	// These variables are used to populate the ending tile of the grid
 	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Helicopter")
@@ -170,14 +161,8 @@ protected:
 	void PlaceProp(FTransform PlacementTransform, float BuildingWidth);
 	void PlaceRoad(FTransform PlacementTransform, float BuildingWidth);
 
-	// Called to populate the forest outside the city
-	void PlantTrees(float BuildingWidth);
-	// Checks that the tree is outside the city, but not too far
-	bool ValidateTreeDistance(FVector TreeLocation, float BuildingWidth);
-
-	// Called to create the sea landscape
-	void CreateSea();
-	
+	// Sets up the forest outside the city
+	void CreateForest(float BuildingWidth);
 	// Sets up the helicopter ending space
-	void CreateEnding(float BuildingWidth);
+	void CreateHelicopter(float BuildingWidth);
 };

@@ -2,8 +2,9 @@
 
 
 #include "CityGenerator.h"
+
+#include "Forest.h"
 #include "Helicopter.h"
-#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ACityGenerator::ACityGenerator()
@@ -42,9 +43,8 @@ void ACityGenerator::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// We create the prop arrays for city debris population and forest
+	// We create the prop arrays for city debris population
 	if (PropArray.Num()) CreatePropComponents();
-	if (TreeArray.Num()) CreateForestComponents();
 	
 	// Derives the size of the city grid by dividing the box bounds by the size of the building
 	PopulationGrid.Init(true, Rows * Columns);
@@ -80,21 +80,6 @@ void ACityGenerator::CreatePropComponents()
 		PropComponentArray[PropLooper]->SetupAttachment(this->RootComponent);
 		PropComponentArray[PropLooper]->SetStaticMesh(PropArray[PropLooper]);
 		PropComponentArray[PropLooper]->SetWorldLocation(this->GetActorLocation());
-	}
-}
-void ACityGenerator::CreateForestComponents()
-{
-	// We initiate the array to be as big as the tree array
-	TreeComponentArray.Init(nullptr, TreeArray.Num());
-
-	// Then for each entry, we construct a component and add it to the root
-	for (int32 TreeLooper = 0; TreeLooper < TreeArray.Num(); ++TreeLooper)
-	{
-		TreeComponentArray[TreeLooper] = Cast<UInstancedStaticMeshComponent>(StaticConstructObject_Internal(UInstancedStaticMeshComponent::StaticClass(), this));
-		TreeComponentArray[TreeLooper]->RegisterComponent();
-		TreeComponentArray[TreeLooper]->SetupAttachment(this->RootComponent);
-		TreeComponentArray[TreeLooper]->SetStaticMesh(TreeArray[TreeLooper]);
-		TreeComponentArray[TreeLooper]->SetWorldLocation(this->GetActorLocation());
 	}
 }
 
@@ -297,8 +282,8 @@ bool ACityGenerator::BuildCity()
 	}
 
 	// We then create the helicopter and forest
-	CreateEnding(BuildingWidth);
-	if (TreeArray.Num()) PlantTrees(BuildingWidth);
+	CreateHelicopter(BuildingWidth);
+	if (TreeArray.Num()) CreateForest(BuildingWidth);
 	return true;
 }
 void ACityGenerator::PlaceBuilding(FTransform PlacementTransform, float BuildingWidth)
@@ -329,69 +314,21 @@ void ACityGenerator::PlaceRoad(FTransform PlacementTransform, float BuildingWidt
 	RoadComponent->AddInstance(PlacementTransform);
 }
 
-// Called to populate the forest outside the city
-void ACityGenerator::PlantTrees(float BuildingWidth)
+// Sets up the forest outside the city
+void ACityGenerator::CreateForest(float BuildingWidth)
 {
-	// Loops through the tree placing possibilities, with a max count of a density-controlled variable
-	for (int32 TreeCounter = 0; TreeCounter < FMath::CeilToInt((Rows * Columns) * (ForestDensity / 100)); ++TreeCounter)
-	{
-		// We create a default vector to hold the spawn location
-		FVector TreePlacement;
+	// We create a base spawn parameter for the forest
+	FActorSpawnParameters SpawnParams;
 
-		// and we keep looping through a do while loop to make sure that the placement is valid
-		do
-		{
-			TreePlacement.X = FMath::RandRange(-ForestDistance, (BuildingWidth * Columns) + ForestDistance);
-			TreePlacement.Y = FMath::RandRange(-ForestDistance, (BuildingWidth * Rows) + ForestDistance);
-		} while (!ValidateTreeDistance(TreePlacement, BuildingWidth));
-		TreePlacement.Z = 0;
-		
-		// We assign the location to a transform, alongside a randomised rotation quaternion
-		FTransform TreeTransform;
-		TreeTransform.SetLocation(TreePlacement);
-		FRotator TreeRotator = FRotator(0, FMath::RandRange(0, 359), 0);
-		TreeTransform.SetRotation(TreeRotator.Quaternion());
+	// Then we spawn the forest through the world manager
+	AForest* Forest = GetWorld()->SpawnActor<AForest>(AForest::StaticClass(), this->GetTransform(), SpawnParams);
 
-		// and then we add the tree
-		TreeComponentArray[FMath::RandRange(0, TreeComponentArray.Num() - 1)]->AddInstance(TreeTransform);
-	}
-}
-// Checks that the tree is outside the city, but not too far
-bool ACityGenerator::ValidateTreeDistance(FVector TreeLocation, float BuildingWidth)
-{
-	// If the tree is within the city, return false
-	if (TreeLocation.X >= 0 && TreeLocation.X <= (Columns * BuildingWidth) + BuildingWidth
-		&& TreeLocation.Y >= 0 && TreeLocation.Y <= (Rows * BuildingWidth) + BuildingWidth)
-		return false;
-
-	// We then loop through each tree component
-	for (int32 CompLooper = 0; CompLooper < TreeComponentArray.Num(); ++CompLooper)
-	{
-		// if there are so far no trees of that type, we skip to the next component
-		if (TreeComponentArray[CompLooper]->GetInstanceCount() == 0) continue;
-
-		// We loop through each instance of this component's trees
-		for (int32 InstanceLooper = 0; InstanceLooper < TreeComponentArray[CompLooper]->GetInstanceCount(); ++InstanceLooper)
-		{
-			FTransform TreeTransform;
-			TreeComponentArray[CompLooper]->GetInstanceTransform(InstanceLooper, TreeTransform);
-			// And if the new tree location is too close, we return false
-			if (UKismetMathLibrary::Vector_Distance(TreeLocation, TreeTransform.GetLocation()) < TreeArray[CompLooper]->GetBoundingBox().GetSize().X / ForestLeniency) return false;
-		}
-	}
-	// If none of these conditions are met, the tree placement is valid, and we place the tree
-	return true;
-}
-
-// Called to create the sea landscape
-void ACityGenerator::CreateSea()
-{
-	//SeaLandscape = NewObject<ALandscape>(this);
-	//SeaLandscape->Set
+	// And finally we initialise it with the user-defined parameters
+	Forest->ReceiveCreateForest(TreeArray, ForestDensity, ForestDistance, ForestLeniency, BuildingWidth, Rows, Columns);
 }
 
 // Sets up the helicopter ending space
-void ACityGenerator::CreateEnding(float BuildingWidth)
+void ACityGenerator::CreateHelicopter(float BuildingWidth)
 {
 	// We first initialise the ending location
 	FActorSpawnParameters HeliSpawnParams;
