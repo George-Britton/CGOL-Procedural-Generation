@@ -3,8 +3,6 @@
 
 #include "Forest.h"
 
-#include "Kismet/KismetMathLibrary.h"
-
 // Sets default values
 AForest::AForest()
 {
@@ -14,7 +12,7 @@ AForest::AForest()
 }
 
 // Receives the command to create the forest
-void AForest::ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InForestDensity, float InForestDistance, float InForestLeniency, float BuildingWidth, uint32 InRows, uint32 InColumns)
+void AForest::ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InForestDensity, float InForestDistance, float InForestLeniency, float BuildingWidth, uint32 InRows, uint32 InColumns, float inForestFalloff)
 {
 	// We se our forest variables to those passed in by the generator
 	TreeArray = InTreeArray;
@@ -23,6 +21,7 @@ void AForest::ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InFor
 	ForestLeniency = InForestLeniency;
 	Rows = InRows;
 	Columns = InColumns;
+	ForestFalloff = inForestFalloff;
 
 	// Then we create the forest components
 	if (TreeArray.Num())
@@ -78,10 +77,15 @@ void AForest::PlantTrees(float BuildingWidth)
 bool AForest::ValidateTreeDistance(FVector TreeLocation, float BuildingWidth)
 {
 	// If the tree is within the city, return false
-	if (TreeLocation.X >= 0 && TreeLocation.X <= (Columns * BuildingWidth) + BuildingWidth
-		&& TreeLocation.Y >= 0 && TreeLocation.Y <= (Rows * BuildingWidth) + BuildingWidth)
+	if (TreeLocation.X >= -0.25f * BuildingWidth && TreeLocation.X <= (Columns * BuildingWidth) + (BuildingWidth * 1.25f)
+		&& TreeLocation.Y >= -0.25 * BuildingWidth && TreeLocation.Y <= (Rows * BuildingWidth) + (BuildingWidth * 1.25f))
 		return false;
 
+	if (ForestFalloff > 0)
+		if (TreeLocation.X < -FMath::RandRange(0.f, ForestFalloff * BuildingWidth)) return false;
+	if (ForestFalloff < 0)
+		if (TreeLocation.X < -FMath::RandRange(ForestFalloff * BuildingWidth, 0.f)) return false;
+	/*
 	// We then loop through each tree component
 	for (int32 CompLooper = 0; CompLooper < TreeComponentArray.Num(); ++CompLooper)
 	{
@@ -96,7 +100,7 @@ bool AForest::ValidateTreeDistance(FVector TreeLocation, float BuildingWidth)
 			// And if the new tree location is too close, we return false
 			if (UKismetMathLibrary::Vector_Distance(TreeLocation, TreeTransform.GetLocation()) < TreeArray[CompLooper]->GetBoundingBox().GetSize().X / ForestLeniency) return false;
 		}
-	}
+	}*/
 	// If none of these conditions are met, the tree placement is valid, and we place the tree
 	return true;
 }

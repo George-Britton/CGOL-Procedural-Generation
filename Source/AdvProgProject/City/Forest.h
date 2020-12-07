@@ -24,6 +24,8 @@ public:
 		float ForestDistance = 50000.f;
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 		float ForestLeniency = 2.f;
+	UPROPERTY(EditAnywhere, Category = "Appearance")
+		float ForestFalloff = 10.f;
 	UPROPERTY()
 		TArray<UInstancedStaticMeshComponent*> TreeComponentArray;
 
@@ -35,7 +37,7 @@ public:
 
 	
 	// Receives the command to create the forest
-	void ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InForestDensity, float InForestDistance, float InForestLeniency, float BuildingWidth, uint32 InRows, uint32 InColumns);
+	void ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InForestDensity, float InForestDistance, float InForestLeniency, float BuildingWidth, uint32 InRows, uint32 InColumns, float inForestFalloff);
 
 private:
 	

@@ -29,17 +29,6 @@ struct FCellLifeRule
 	}
 };
 
-// Enum to be used for the cardinal directions for the drunkard to step
-UENUM(BlueprintType)
-enum class EDifficulty : uint8
-{
-	EASY UMETA(DisplayName = "Easy"),
-	NORMAL UMETA(DisplayName = "Normal"),
-	HARD UMETA(DisplayName = "Hard"),
-	MAX
-
-};
-
 // This class is derived from the BoxComponent class, and is used to populate the cityscape
 UCLASS()
 class ADVPROGPROJECT_API ACityGenerator : public AActor
@@ -65,71 +54,56 @@ public:
 
 	// CITY
 	// 'CityBuilding' is the static mesh that 'CityBuildingISMComponent' uses for populating the city
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Buildings")
+	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		UStaticMesh* CityBuilding = nullptr;
-	UPROPERTY()
-		UInstancedStaticMeshComponent* CityBuildingISMComponent = nullptr;
 	// The rows and columns are used to set the size of the grid
 	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		int32 Rows = 50;
 	UPROPERTY(EditAnywhere, Category = "City|Creation")
 		int32 Columns = 50;
+	int32 EndingPosition = 0;
 
 	// PROPS AND ROADS
 	// These populate the city streets with random props and a road
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Props")
+	UPROPERTY(EditAnywhere, Category = "City|Props")
 		TArray<UStaticMesh*> PropArray;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Props")
+	UPROPERTY(EditAnywhere, Category = "City|Props")
 		float PropSpawnProbability = 20.f;
-	UPROPERTY()
-		TArray<UInstancedStaticMeshComponent*> PropComponentArray;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Road")
+	UPROPERTY(EditAnywhere, Category = "City|Road")
 		UStaticMesh* RoadMesh = nullptr;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Road")
+	UPROPERTY(EditAnywhere, Category = "City|Road")
 		UMaterial* RoadMaterial = nullptr;
-	UPROPERTY()
-		UInstancedStaticMeshComponent* RoadComponent = nullptr;
 
 	// FOREST
 	// These populate the forest outside the city
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+	UPROPERTY(EditAnywhere, Category = "Forest")
 		TArray<UStaticMesh*> TreeArray;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+	UPROPERTY(EditAnywhere, Category = "Forest")
 		uint32 ForestDensity = 25;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+	UPROPERTY(EditAnywhere, Category = "Forest")
 		float ForestDistance = 50000.f;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Forest")
+	UPROPERTY(EditAnywhere, Category = "Forest")
 		float ForestLeniency = 2.f;
+	UPROPERTY(EditAnywhere, Category = "Forest")
+		float ForestFalloff = 10.f;
 
 	// SEA
 	// These set the conditions for the sea that spawns by the side of the city
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Sea")
+	UPROPERTY(EditAnywhere, Category = "Sea")
 		UMaterial* SeaMaterial = nullptr;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|Sea")
+	UPROPERTY(EditAnywhere, Category = "Sea")
 		float SeaDistance = 5000;
 
 	// ENDING
 	// These variables are used to populate the ending tile of the grid
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Helicopter")
+	UPROPERTY(EditAnywhere, Category = "City|Helicopter")
 		USkeletalMesh* HelicopterMesh = nullptr;
-	UPROPERTY(EditAnywhere, Category = "City|Appearance|City|Helicopter")
+	UPROPERTY(EditAnywhere, Category = "City|Helicopter")
 		float HelicopterScale = 0.7f;
-
-	// GRID TECHNICALS
-	// The population grid and start/end positions of the city maze
-	UPROPERTY()
-		TArray<bool> PopulationGrid;
-	UPROPERTY()
-		int32 StartingPosition = 0;
-	UPROPERTY()
-		int32 EndingPosition = 0;
-	// A grid used to flood fill in order to check for a walkable path
-	UPROPERTY()
-		TArray<bool> FloodArray;
 
 	// EVENT DISPATCHERS
 	// The event dispatcher for letting the player know it's ready to go
-	UPROPERTY(BlueprintAssignable, Category = "City")
+	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnCityReady OnCityReady;
 
 protected:
@@ -140,41 +114,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// GENERATION
-	// Called to create the city prop components and forest components
-	void CreatePropComponents();
-	// Finds a suitable start and end cell
-	void FindEnds();
-	// Initialises the population grid to be evolved
-	void InitialiseGrid();
-	// Called to create a randomly generated city
-	void GenerateCity();
-	// Checks that there is a walkable path for the player
-	bool IsPathWalkable();
-	TArray<int32> FloodFill(int32 Cell);
-
-	// CELLULAR AUTOMATION
-	// Counts the amounts of 'True' neighbours a grid cell has
-	int32 CountLivingNeighbours(int32 Cell, TArray<int32> RelativeNeighbours);
-	// Creates an array that stores the relative addresses of a cell's neighbours
-	TArray<int32> CreateNeighbourArray();
-	// Returns whether or not the cell provided is in the boarder
-	bool IsWithinBorder(int32 Cell);
-	// Return whether or not the cell is out of bounds
-	bool IsOutOfBounds(int32 Cell);
-
-	// CITY POPULATION
-	// Called to populate the world
-	bool BuildCity();
-	void PlaceBuilding(FTransform PlacementTransform, float BuildingWidth);
-	void PlaceProp(FTransform PlacementTransform, float BuildingWidth);
-	void PlaceRoad(FTransform PlacementTransform, float BuildingWidth);
-
 	// CREATES EXTERNAL ACTORS
+	// Constructs the city in the middle of the map
+	void CreateCity();
 	// Constructs the sea by the side of the city
 	void CreateSea();
 	// Sets up the forest outside the city
-	void CreateForest(float BuildingWidth);
-	// Sets up the helicopter ending space
-	void CreateHelicopter(float BuildingWidth);
+	void CreateForest();
 };
