@@ -66,7 +66,7 @@ void ACityGenerator::CreateSea()
 	ASea* Sea = GetWorld()->SpawnActor<ASea>(ASea::StaticClass(), this->GetTransform(), SpawnParams);
 	
 	// Then we initialise the sea with its user-defined parameters
-	Sea->ReceiveCreateSea(SeaMaterial, SeaDistance);
+	Sea->ReceiveCreateSea(SeaMesh, BeachMesh, SeaDistance, SeaHeight, SeaWidth, BeachWidth);
 }
 // Sets up the forest outside the city
 void ACityGenerator::CreateForest()

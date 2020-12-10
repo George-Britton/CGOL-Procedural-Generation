@@ -90,9 +90,17 @@ public:
 	// SEA
 	// These set the conditions for the sea that spawns by the side of the city
 	UPROPERTY(EditAnywhere, Category = "Sea")
-		UMaterial* SeaMaterial = nullptr;
+		UStaticMesh* SeaMesh = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Sea")
-		float SeaDistance = 5000;
+		UStaticMesh* BeachMesh = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Sea")
+		float SeaDistance = 50000;
+	UPROPERTY(EditAnywhere, Category = "Sea")
+		int32 SeaHeight = 200;
+	UPROPERTY(EditAnywhere, Category = "Sea")
+		int32 SeaWidth = 40;
+	UPROPERTY(EditAnywhere, Category = "Sea")
+		int32 BeachWidth = 20;
 
 	// ENDING
 	// These variables are used to populate the ending tile of the grid

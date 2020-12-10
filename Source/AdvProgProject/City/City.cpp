@@ -8,7 +8,7 @@
 ACity::ACity()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// We now construct the components and attach them all to the root
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
