@@ -6,11 +6,11 @@
 // Sets default values
 ASea::ASea()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	// Set this actor to not tick every frame.
+	PrimaryActorTick.bCanEverTick = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SeaComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Sea Component"));
-	BeachComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Beach Component"));
+	SeaComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sea Component"));
+	BeachComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Beach Component"));
 	SeaComponent->SetupAttachment(this->RootComponent);
 	BeachComponent->SetupAttachment(this->RootComponent);
 }
@@ -38,23 +38,16 @@ void ASea::ReceiveCreateSea(UStaticMesh* InSeaMesh, UStaticMesh* InBeachMesh, fl
 void ASea::CreateSea()
 {
 	// First we move the sea to be running past the city with the user-defined distances
+	// and calculating their relative distances from the city
 	float TileWidth = SeaMesh->GetBoundingBox().GetSize().X;
-	FVector RelativePos = FVector(-SeaDistance, 5.f, -0.25f * SeaHeight * TileWidth);
-	this->SetActorRelativeLocation(RelativePos);
+	FVector BasePos = FVector(-SeaDistance, SeaWidth / 2 * TileWidth, 1.f);
+	FVector BeachPos = FVector(-(BeachWidth / 2) * TileWidth, 0, 0);
+	FVector SeaPos = FVector(-(SeaWidth / 2 + BeachWidth) * TileWidth, 0, 0);
+	this->SetActorRelativeLocation(BasePos);
+	BeachComponent->SetRelativeLocation(BeachPos);
+	SeaComponent->SetRelativeLocation(SeaPos);
 
-	// This is used to measure the total width of the entire tile count
-	int32 TotalWidth = SeaWidth + BeachWidth;
-	// Then we start looping through the sea population count
-	for (int32 Tile = 0; Tile < TotalWidth * SeaHeight; ++Tile)
-	{
-		// We create a transform that holds the tile placement parameters
-		FTransform TileTransform;
-		TileTransform.SetLocation(FVector((Tile % TotalWidth) * TileWidth, FMath::FloorToInt(Tile / SeaHeight) * TileWidth, 0));
-
-		// If the tile is further than the beach, place a sea tile, otherwise place a beach tile
-		if (Tile % TotalWidth <= SeaWidth)
-		{
-			SeaComponent->AddInstance(TileTransform);
-		}else BeachComponent->AddInstance(TileTransform);
-	}	
+	// Then we set the meshes to span the length of the map
+	SeaComponent->SetRelativeScale3D(FVector(SeaWidth, SeaHeight, 1.f));
+	BeachComponent->SetRelativeScale3D(FVector(BeachWidth, SeaHeight, 1.f));
 }

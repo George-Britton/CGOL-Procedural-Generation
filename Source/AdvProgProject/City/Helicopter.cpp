@@ -7,8 +7,8 @@
 // Sets default values
 AHelicopter::AHelicopter()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	// Set this actor to not tick every frame.
+	PrimaryActorTick.bCanEverTick = false;
 
 	// Here we create the component variables
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));

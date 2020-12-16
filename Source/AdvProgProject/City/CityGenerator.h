@@ -94,13 +94,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Sea")
 		UStaticMesh* BeachMesh = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Sea")
-		float SeaDistance = 50000;
+		float SeaDistance = 5000;
 	UPROPERTY(EditAnywhere, Category = "Sea")
-		int32 SeaHeight = 200;
+		int32 SeaHeight = 2000;
 	UPROPERTY(EditAnywhere, Category = "Sea")
-		int32 SeaWidth = 40;
+		int32 SeaWidth = 1000;
 	UPROPERTY(EditAnywhere, Category = "Sea")
-		int32 BeachWidth = 20;
+		int32 BeachWidth = 300;
 
 	// ENDING
 	// These variables are used to populate the ending tile of the grid

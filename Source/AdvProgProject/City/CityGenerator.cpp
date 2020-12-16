@@ -11,7 +11,7 @@
 // Sets default values
 ACityGenerator::ACityGenerator()
 {
-	// We don't want the generator to tick as after the city generation it is static
+	// Set this actor to not tick every frame.
 	PrimaryActorTick.bCanEverTick = false;
 
 	// We now construct the components and attach them all to the root
