@@ -339,8 +339,8 @@ void ACity::CreateHelicopter()
 	FVector EndSpawnLocation = this->GetActorLocation();
 
 	// We then add the relative position from the index and column count
-	EndSpawnLocation.X += (EndingPosition % Columns) * BuildingWidth;
-	EndSpawnLocation.Y += FMath::FloorToInt(EndingPosition / Columns) * BuildingWidth;
+	EndSpawnLocation.X += (EndingPosition % Columns) * BuildingWidth + BuildingWidth / 2;
+	EndSpawnLocation.Y += FMath::FloorToInt(EndingPosition / Columns) * BuildingWidth + BuildingWidth / 2;
 
 	// We put the helicopter there and set the mesh
 	AHelicopter* Helicopter = GetWorld()->SpawnActor<AHelicopter>(AHelicopter::StaticClass(), EndSpawnLocation, FRotator::ZeroRotator, HeliSpawnParams);
