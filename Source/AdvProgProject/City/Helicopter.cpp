@@ -16,12 +16,13 @@ AHelicopter::AHelicopter()
 	EndOverlapBox = CreateDefaultSubobject<UBoxComponent>(TEXT("End Overlap Box"));
 	HelicopterMeshComponent->SetupAttachment(this->RootComponent);
 	EndOverlapBox->SetupAttachment(this->RootComponent);
+	HelicopterMeshComponent->SetCollisionProfileName("BlockAll");
 }
 
 // Called when another actor overlaps with this actor
 void AHelicopter::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-	if (OtherActor->GetName() == "Player") OnPlayerReachEnd.Broadcast();
+	if (OtherActor->GetName().Contains("Player")) OnPlayerReachEnd.Broadcast();
 }
 
 // Initialises the box around the added mesh

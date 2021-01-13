@@ -7,7 +7,7 @@
 // Sets default values
 ACity::ACity()
 {
- 	// Set this actor to not tick every frame.
+	// Set this actor to not tick every frame.
 	PrimaryActorTick.bCanEverTick = false;
 
 	// We now construct the components and attach them all to the root
@@ -45,18 +45,18 @@ void ACity::SanitizeInput()
 {
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
-	
+
 	// We clamp the border width to be a minimum of 0
 	BorderWidth = FMath::Clamp(BorderWidth, 0, BorderWidth);
 
 	// We also clamp the prop spawn percent to between 0 and 100
 	PropSpawnProbability = FMath::Clamp(PropSpawnProbability, 0.f, 100.f);
-	
+
 	// Sets the static meshes to be instanced in the city
 	if (CityBuilding) CityBuildingISMComponent->SetStaticMesh(CityBuilding);
 	//if (RoadMesh) RoadComponent->SetStaticMesh(RoadMesh);
 	//if (RoadMaterial) RoadComponent->SetMaterial(0, RoadMaterial);
-	
+
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
 
@@ -290,7 +290,7 @@ bool ACity::BuildCity()
 
 		// We find out whether we need to add a building
 		if (PopulationGrid[GridSquare]) PlaceBuilding(GridTransform, BuildingWidth);
-		else
+		else if (GridSquare != EndingPosition)
 		{
 			PlaceRoad(GridTransform, BuildingWidth);
 			if (FMath::RandRange(0.f, 99.9f) < PropSpawnProbability && PropArray.Num()) PlaceProp(GridTransform, BuildingWidth);
@@ -333,7 +333,7 @@ void ACity::CreateHelicopter()
 {
 	// The width of the building mesh, used to align them to grid
 	float BuildingWidth = CityBuilding->GetBoundingBox().GetSize().X;
-	
+
 	// We first initialise the ending location
 	FActorSpawnParameters HeliSpawnParams;
 	FVector EndSpawnLocation = this->GetActorLocation();

@@ -13,8 +13,8 @@ UCLASS()
 class ADVPROGPROJECT_API ACity : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ACity();
 
@@ -116,8 +116,8 @@ private:
 
 	// Sets up the helicopter ending space
 	void CreateHelicopter();
-	
-public:	
+
+public:
 	// Called to set the city parameters to the user-defined ones
 	void ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale);
 
