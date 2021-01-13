@@ -20,7 +20,7 @@ APlayerCharacter::APlayerCharacter()
 	PlayerCamera->SetupAttachment(this->RootComponent);
 	PlayerCamera->SetRelativeLocation(FVector(0, 0, CameraHeight));
 	Gun = CreateDefaultSubobject<UGun>(TEXT("Gun"));
-	Gun->SetupAttachment(this->RootComponent);
+	Gun->SetupAttachment(PlayerCamera);
 
 	// We make sure the player possesses the actor, and set the basic input settings
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -31,6 +31,9 @@ APlayerCharacter::APlayerCharacter()
 // Called when a value changes
 void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
+	// Here we'll make sure the gun is in the right place for the player
+	Gun->SetRelativeTransform(GunTransform);
+	
 	// Here we'll make sure all our values stay in a valid range
 	CameraHeight = FMath::Clamp(CameraHeight, 1.f, MAX_CAMERA_HEIGHT);
 	CameraPitchLimit = FMath::Clamp(CameraPitchLimit, 1.f, MAX_CAMERA_PITCH_LIMIT);
@@ -66,7 +69,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Gun->CustomTick(DeltaTime);
+	if (Gun) Gun->CustomTick(DeltaTime);
 	
 	if (IsJumping && !GetCharacterMovement()->IsFalling())
 	{
@@ -116,7 +119,7 @@ void APlayerCharacter::ToggleRun(bool Running)
 {
 	if (Running)
 	{
-		if (IsRunning)
+		if (!IsRunning)
 		{
 			ToggleCrouch(false);
 			GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
@@ -125,8 +128,11 @@ void APlayerCharacter::ToggleRun(bool Running)
 	}
 	else
 	{
-		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
-		IsRunning = false;
+		if (IsRunning)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
+			IsRunning = false;
+		}
 	}
 
 }
@@ -135,7 +141,7 @@ void APlayerCharacter::ToggleCrouch(bool Crouching)
 {
 	if (Crouching)
 	{
-		if (IsCrouching)
+		if (!IsCrouching)
 		{
 			ToggleJump(false);
 			ToggleRun(false);
@@ -146,9 +152,12 @@ void APlayerCharacter::ToggleCrouch(bool Crouching)
 	}
 	else
 	{
-		GetCapsuleComponent()->SetCapsuleSize(GetCapsuleComponent()->GetUnscaledCapsuleRadius(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 2);
-		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
-		IsCrouching = false;
+		if (IsCrouching)
+		{
+			GetCapsuleComponent()->SetCapsuleSize(GetCapsuleComponent()->GetUnscaledCapsuleRadius(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 2);
+			GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
+			IsCrouching = false;
+		}
 	}
 }
 // Makes the player keep jumping up

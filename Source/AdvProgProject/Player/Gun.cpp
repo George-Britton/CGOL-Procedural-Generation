@@ -17,7 +17,9 @@ void UGun::InitialiseGun(UStaticMesh* InGunMesh, float InFireRate)
 
 	// We set the gun mesh to the component
 	this->SetStaticMesh(GunMesh);
-
+	this->SetCollisionProfileName("IgnoreAll");
+	this->CastShadow = false;
+	
 	// We set the fire rate to be the user-set one
 	if (InFireRate) FireRate = InFireRate;
 }

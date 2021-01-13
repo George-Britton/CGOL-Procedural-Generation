@@ -53,6 +53,8 @@ public:
 		UStaticMesh* GunMesh = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 		float FireRate = 0.5f;
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+		FTransform GunTransform;
 
 protected:
 	// Called when the game starts or when spawned
