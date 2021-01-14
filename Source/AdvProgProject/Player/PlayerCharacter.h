@@ -55,6 +55,10 @@ public:
 		float FireRate = 0.5f;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 		FTransform GunTransform;
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+		UParticleSystem* GunshotParticles = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+		FTransform GunshotParticleTransform;
 
 protected:
 	// Called when the game starts or when spawned

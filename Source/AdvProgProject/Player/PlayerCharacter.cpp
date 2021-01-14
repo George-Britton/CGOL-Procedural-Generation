@@ -32,7 +32,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
 	// Here we'll make sure the gun is in the right place for the player
-	Gun->SetRelativeTransform(GunTransform);
+	//if (Gun) Gun->CustomOnConstruction(GunTransform, GunshotParticleTransform);
 	
 	// Here we'll make sure all our values stay in a valid range
 	CameraHeight = FMath::Clamp(CameraHeight, 1.f, MAX_CAMERA_HEIGHT);
@@ -50,7 +50,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	// Here we initialise the gun's appearance and rate of fire
-	Gun->InitialiseGun(GunMesh, FireRate);
+	Gun->InitialiseGun(GunMesh, FireRate, GunshotParticles);
 
 	// If the gun is destroyed due to no mesh, we call this
 	if (!Gun)

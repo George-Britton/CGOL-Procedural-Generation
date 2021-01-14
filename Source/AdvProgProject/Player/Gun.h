@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Gun.generated.h"
 
@@ -24,9 +25,14 @@ public:
 		float TimeSinceLastFire = 0.f;
 	UPROPERTY()
 		bool IsFiring = false;
+	UPROPERTY()
+		UParticleSystemComponent* GunshotParticleSystem = nullptr;
 
 	// Called to initialise the gun variables from the player-set parameters
-	void InitialiseGun(UStaticMesh* InGunMesh, float InFireRate);
+	void InitialiseGun(UStaticMesh* InGunMesh, float InFireRate, UParticleSystem* GunshotParticles);
+
+	// Called when a value changes
+	void CustomOnConstruction(FTransform GunTransform, FTransform GunshotParticleTransform);
 
 	// Called every frame
 	void CustomTick(float DeltaTime);

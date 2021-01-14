@@ -5,7 +5,7 @@
 #include "PlayerCharacter.h"
 
 // Called to initialise the gun variables from the player-set parameters
-void UGun::InitialiseGun(UStaticMesh* InGunMesh, float InFireRate)
+void UGun::InitialiseGun(UStaticMesh* InGunMesh, float InFireRate, UParticleSystem* GunshotParticles)
 {
 	// If the player passed in a mesh, set the local mesh, if none is passed in, destroy gun
 	if (InGunMesh) { GunMesh = InGunMesh; }
@@ -22,6 +22,21 @@ void UGun::InitialiseGun(UStaticMesh* InGunMesh, float InFireRate)
 	
 	// We set the fire rate to be the user-set one
 	if (InFireRate) FireRate = InFireRate;
+
+	// We also create the gunshot particle component
+	if (GunshotParticles)
+	{
+		GunshotParticleSystem = Cast<UParticleSystemComponent>(StaticConstructObject_Internal(UParticleSystemComponent::StaticClass(), this));
+		GunshotParticleSystem->SetTemplate(GunshotParticles);
+		GunshotParticleSystem->bAutoActivate = false;
+	}
+}
+
+// Called when a value changes
+void UGun::CustomOnConstruction(FTransform GunTransform, FTransform GunshotParticleTransform)
+{
+	SetRelativeTransform(GunTransform);
+	//GunshotParticleSystem->SetRelativeTransform(GunshotParticleTransform);
 }
 
 // Called every frame
@@ -44,6 +59,7 @@ void UGun::ToggleFire(bool Firing)
 void UGun::Fire()
 {
 	// TODO: Add Gun firing code
+	//GunshotParticleSystem->Activate();
 	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, "BANG!");
 	TimeSinceLastFire = FireRate;
 }
