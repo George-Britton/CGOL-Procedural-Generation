@@ -28,7 +28,7 @@ void UGun::InitialiseGun(UStaticMesh* InGunMesh, float InFireRate, UParticleSyst
 	{
 		GunshotParticleSystem = Cast<UParticleSystemComponent>(StaticConstructObject_Internal(UParticleSystemComponent::StaticClass(), this));
 		GunshotParticleSystem->SetTemplate(GunshotParticles);
-		GunshotParticleSystem->bAutoActivate = false;
+		GunshotParticleSystem->bAutoActivate = true;
 	}
 }
 
@@ -59,7 +59,7 @@ void UGun::ToggleFire(bool Firing)
 void UGun::Fire()
 {
 	// TODO: Add Gun firing code
-	//GunshotParticleSystem->Activate();
+	GunshotParticleSystem->Activate();
 	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, "BANG!");
 	TimeSinceLastFire = FireRate;
 }

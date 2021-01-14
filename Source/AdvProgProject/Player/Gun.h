@@ -25,7 +25,7 @@ public:
 		float TimeSinceLastFire = 0.f;
 	UPROPERTY()
 		bool IsFiring = false;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "Appearance")
 		UParticleSystemComponent* GunshotParticleSystem = nullptr;
 
 	// Called to initialise the gun variables from the player-set parameters
