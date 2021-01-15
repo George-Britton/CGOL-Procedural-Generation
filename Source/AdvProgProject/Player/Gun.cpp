@@ -2,41 +2,40 @@
 
 
 #include "Gun.h"
+#include "Components/AudioComponent.h"
 #include "PlayerCharacter.h"
+#include "DrawDebugHelpers.h"
+#include "GameFramework/PlayerController.h"
 
-// Called to initialise the gun variables from the player-set parameters
-void UGun::InitialiseGun(UStaticMesh* InGunMesh, float InFireRate, UParticleSystem* GunshotParticles)
+// Sets default values
+UGun::UGun()
 {
-	// If the player passed in a mesh, set the local mesh, if none is passed in, destroy gun
-	if (InGunMesh) { GunMesh = InGunMesh; }
-	else
-	{
-		Cast<APlayerCharacter>(this->GetOwner())->Gun = nullptr;
-		this->DestroyComponent();
-	}
+	// Here we add the particle system for the gunshot particles and sound
+	GunshotParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Gunshot Particles"));
+	GunshotParticleSystem->SetupAttachment(this);
+	GunshotParticleSystem->bAutoManageAttachment = true;
+	GunshotParticleSystem->bAutoActivate = false;
+	GunshotSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Gunshot Sound"));
+	GunshotSoundComponent->SetupAttachment(this);
 
 	// We set the gun mesh to the component
 	this->SetStaticMesh(GunMesh);
 	this->SetCollisionProfileName("IgnoreAll");
 	this->CastShadow = false;
-	
-	// We set the fire rate to be the user-set one
-	if (InFireRate) FireRate = InFireRate;
-
-	// We also create the gunshot particle component
-	if (GunshotParticles)
-	{
-		GunshotParticleSystem = Cast<UParticleSystemComponent>(StaticConstructObject_Internal(UParticleSystemComponent::StaticClass(), this));
-		GunshotParticleSystem->SetTemplate(GunshotParticles);
-		GunshotParticleSystem->bAutoActivate = true;
-	}
 }
 
 // Called when a value changes
-void UGun::CustomOnConstruction(FTransform GunTransform, FTransform GunshotParticleTransform)
+void UGun::CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange)
 {
 	SetRelativeTransform(GunTransform);
-	//GunshotParticleSystem->SetRelativeTransform(GunshotParticleTransform);
+	GunshotRange = InGunshotRange;
+	FireRate = InFireRate;
+	GunshotParticleSystem->SetTemplate(GunshotParticles);
+	GunMesh = InGunMesh;
+	SetStaticMesh(GunMesh);
+	if (GunMesh) if (GunMesh->GetName().Contains("M5")) GunshotParticleSystem->AutoAttachSocketName = "Barrel";
+	GunshotSound = InGunshotSound;
+	GunshotSoundComponent->SetSound(GunshotSound);
 }
 
 // Called every frame
@@ -58,8 +57,24 @@ void UGun::ToggleFire(bool Firing)
 // Executes a fire from the gun
 void UGun::Fire()
 {
+	FVector WorldLoc;
+	FVector WorldDir;
+	PlayerController->DeprojectScreenPositionToWorld(0.5f, 0.5f, WorldLoc, WorldDir);
+		
+	FHitResult HitEnemy;
+	FVector RayStart = PlayerCamera->GetComponentLocation();
+	FVector RayEnd = WorldLoc;
+	FCollisionQueryParams CollisionParameters;
+
+	DrawDebugLine(GetWorld(), RayStart, RayEnd, FColor::Red, false, 2, 0, 1);
+	
+	if (GetWorld()->LineTraceSingleByChannel(HitEnemy, RayStart, RayEnd, ECC_Visibility, CollisionParameters))
+	{
+		if (HitEnemy.bBlockingHit) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "HIT: " + HitEnemy.GetActor()->GetName());
+	}
+	
 	// TODO: Add Gun firing code
-	GunshotParticleSystem->Activate();
-	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, "BANG!");
+	GunshotSoundComponent->Play();
+	GunshotParticleSystem->Activate(true);
 	TimeSinceLastFire = FireRate;
 }

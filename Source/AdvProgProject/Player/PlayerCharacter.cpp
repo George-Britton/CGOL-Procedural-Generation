@@ -15,12 +15,14 @@ APlayerCharacter::APlayerCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Here we create the camera component for the player and set it's parent and height
+	// Here we create the camera component for the player and set it's parent and camera
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Player Camera"));
 	PlayerCamera->SetupAttachment(this->RootComponent);
 	PlayerCamera->SetRelativeLocation(FVector(0, 0, CameraHeight));
 	Gun = CreateDefaultSubobject<UGun>(TEXT("Gun"));
 	Gun->SetupAttachment(PlayerCamera);
+	Gun->PlayerCamera = PlayerCamera;
+	Gun->PlayerController = Cast<APlayerController>(GetController());
 
 	// We make sure the player possesses the actor, and set the basic input settings
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -32,7 +34,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
 	// Here we'll make sure the gun is in the right place for the player
-	//if (Gun) Gun->CustomOnConstruction(GunTransform, GunshotParticleTransform);
+	Gun->CustomOnConstruction(GunMesh, GunTransform, FireRate, GunshotParticles, GunshotSound, GunshotRange);
 	
 	// Here we'll make sure all our values stay in a valid range
 	CameraHeight = FMath::Clamp(CameraHeight, 1.f, MAX_CAMERA_HEIGHT);
@@ -48,9 +50,6 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Here we initialise the gun's appearance and rate of fire
-	Gun->InitialiseGun(GunMesh, FireRate, GunshotParticles);
 
 	// If the gun is destroyed due to no mesh, we call this
 	if (!Gun)
@@ -69,8 +68,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// We call tick on the gun
 	if (Gun) Gun->CustomTick(DeltaTime);
-	
+
+	// If the player is on the ground, and is pressing jump, they jump
 	if (IsJumping && !GetCharacterMovement()->IsFalling())
 	{
 		ToggleCrouch(false);
@@ -117,6 +118,7 @@ void APlayerCharacter::RotateY(float AxisValue)
 // Makes the player run
 void APlayerCharacter::ToggleRun(bool Running)
 {
+	// If the player is not running but should be, the player stops crouching and starts running
 	if (Running)
 	{
 		if (!IsRunning)
@@ -126,7 +128,7 @@ void APlayerCharacter::ToggleRun(bool Running)
 			IsRunning = true;
 		}
 	}
-	else
+	else // otherwise if the player shouldn't be running but are, they stop running
 	{
 		if (IsRunning)
 		{
@@ -139,6 +141,7 @@ void APlayerCharacter::ToggleRun(bool Running)
 // Crouches the player down
 void APlayerCharacter::ToggleCrouch(bool Crouching)
 {
+	// If the player shoudl be crouching, they stop running and/or jumping, and start crouching
 	if (Crouching)
 	{
 		if (!IsCrouching)
@@ -150,7 +153,7 @@ void APlayerCharacter::ToggleCrouch(bool Crouching)
 			IsCrouching = true;
 		}
 	}
-	else
+	else // otherwise, if the player shouldn't be crouching but is, they stand up
 	{
 		if (IsCrouching)
 		{
@@ -163,6 +166,7 @@ void APlayerCharacter::ToggleCrouch(bool Crouching)
 // Makes the player keep jumping up
 void APlayerCharacter::ToggleJump(bool Jumping)
 {
+	// This simply toggles whether or not the player should be jumping
 	if (Jumping) { IsJumping = true; }
 	else { IsJumping = false; }
 }

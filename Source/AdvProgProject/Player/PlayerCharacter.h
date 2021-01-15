@@ -48,6 +48,8 @@ public:
 
 	// Variables for the player's weapon
 	UPROPERTY(EditAnywhere, Category = "Weapon")
+		float GunshotRange = 10000.f;
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 		UGun* Gun = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 		UStaticMesh* GunMesh = nullptr;
@@ -58,7 +60,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 		UParticleSystem* GunshotParticles = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
-		FTransform GunshotParticleTransform;
+		USoundBase* GunshotSound = nullptr;
 
 protected:
 	// Called when the game starts or when spawned
