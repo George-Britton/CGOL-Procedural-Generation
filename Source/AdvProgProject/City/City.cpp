@@ -290,7 +290,7 @@ bool ACity::BuildCity()
 
 		// We find out whether we need to add a building
 		if (PopulationGrid[GridSquare]) PlaceBuilding(GridTransform, BuildingWidth);
-		else if (GridSquare != EndingPosition)
+		else if (GridSquare != EndingPosition && GridSquare != StartingPosition)
 		{
 			PlaceRoad(GridTransform, BuildingWidth);
 			if (FMath::RandRange(0.f, 99.9f) < PropSpawnProbability && PropArray.Num()) PlaceProp(GridTransform, BuildingWidth);

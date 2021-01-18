@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "Zombie.h"
 #include "ZombieManager.generated.h"
@@ -15,7 +14,7 @@ class ADVPROGPROJECT_API UZombieManager : public UObject
 
 public:
 	// Standard constructor
-	UZombieManager();
+	UZombieManager(){};
 
 	// Reference to the player for raytracing
 	UPROPERTY()
@@ -29,6 +28,10 @@ public:
 	UPROPERTY()
 		TArray<AZombie*> ZombiesWithinChaseSphere;
 
+	// INITIALISATION
+	// This takes in the player as a world context reference and uses it to intialise the zombies
+	void InitialiseActors(APlayerCharacter* InPlayer);
+	
 	// ACTIVATION SPHERES
 	// Used to add zombies to the appropriate arrays
 	UFUNCTION()

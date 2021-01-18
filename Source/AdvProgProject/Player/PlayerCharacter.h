@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Camera/CameraComponent.h"
-#include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Gun.h"
 #include "AdvProgProject/Enemies/Zombie.h"
@@ -16,9 +15,9 @@ DECLARE_DELEGATE_OneParam(FDebugDelegate, FString);
 // We create delegate for the toggling of boolean states
 DECLARE_DELEGATE_OneParam(FToggleState, bool);
 // We create a delegate for the announcement of sphere overlap
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSphereOverlap, AZombie*, OtherActor, UPrimitiveComponent*, OverlappedSphere);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereOverlap, class AZombie*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
 // We also create a delegate for the announcement of sphere end overlaps
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSphereEndOverlap, AZombie*, OtherActor, UPrimitiveComponent*, OverlappedSphere);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereEndOverlap, class AZombie*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
 // We finally make a delegate for if the player dies
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDeath);
 
@@ -93,9 +92,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Enemies")
 		USphereComponent* EnemySightSphere = nullptr;
 	UPROPERTY(BlueprintAssignable, Category = "Enemies")
-		FOnSphereOverlap OnSphereOverlap;
+		FOnPlayerSphereOverlap OnPlayerSphereOverlap;
 	UPROPERTY(BlueprintAssignable, Category = "Enemies")
-		FOnSphereEndOverlap OnSphereEndOverlap;
+		FOnPlayerSphereEndOverlap OnPlayerSphereEndOverlap;
 	
 protected:
 	// Called when the game starts or when spawned

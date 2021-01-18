@@ -5,16 +5,20 @@
 #include "AdvProgProject/Player/PlayerCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 
-// Standard constructor
-UZombieManager::UZombieManager()
+// INITIALISATION
+// This takes in the player as a world context reference and uses it to intialise the zombies
+void UZombieManager::InitialiseActors(APlayerCharacter* InPlayer)
 {
-	Player = Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()));
-	// TODO: Fix this
-	//Player->OnSphereOverlap.AddDynamic(this, &UZombieManager::OnSphereOverlap);
-	//Player->OnSphereEndOverlap.AddDynamic(this, &UZombieManager::OnSphereEndOverlap);
-	//Player->Gun->OnGunshot.AddDynamic(this, &UZombieManager::SendZombiesInRadiusToGunshot);
+	// This sets the player reference and binds the event dispatchers to the relevant functions
+	Player = InPlayer;
+	if (Player)
+	{
+		Player->OnPlayerSphereOverlap.AddDynamic(this, &UZombieManager::OnSphereOverlap);
+		Player->OnPlayerSphereEndOverlap.AddDynamic(this, &UZombieManager::OnSphereEndOverlap);
+		Player->Gun->OnGunshot.AddDynamic(this, &UZombieManager::SendZombiesInRadiusToGunshot);
+	}
 
-	// Here we get all the zombies and put them in the right arrays
+	// Here we make sure the zombies register with the correct arrays
 	InitialiseZombies();
 }
 

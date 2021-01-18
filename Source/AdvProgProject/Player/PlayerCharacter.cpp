@@ -4,6 +4,8 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "AdvProgProject/Config/APGameMode.h"
+#include "AdvProgProject/Enemies/ZombieManager.h"
 
 // global constants
 const static float MAX_CAMERA_HEIGHT = 100.f;
@@ -64,6 +66,11 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// We tell the zombie manager that this is the player
+	AAPGameMode* GameMode = Cast<AAPGameMode>(UGameplayStatics::GetGameMode(this));
+	GameMode->Player = this;
+	Cast<UZombieManager>(GameMode)->InitialiseActors(this);
 
 	// If the gun is destroyed due to no mesh, we call this
 	if (!Gun)
@@ -137,13 +144,13 @@ void APlayerCharacter::CreateEnemySpheres()
 void APlayerCharacter::OnSphereOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AZombie* TestZombie = Cast<AZombie>(OtherActor);
-	if (TestZombie) OnSphereOverlap.Broadcast(TestZombie, HitComp);
+	if (TestZombie) OnPlayerSphereOverlap.Broadcast(TestZombie, HitComp);
 }
 // These three are used to announce when an enemy ends overlap with a sphere
 void APlayerCharacter::OnSphereEndOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	AZombie* TestZombie = Cast<AZombie>(OtherActor);
-	if (TestZombie) OnSphereEndOverlap.Broadcast(TestZombie, HitComp);
+	if (TestZombie) OnPlayerSphereEndOverlap.Broadcast(TestZombie, HitComp);
 }
 // Creates the camera and returns a reference for the gun
 UCameraComponent* APlayerCharacter::CreateCamera()
