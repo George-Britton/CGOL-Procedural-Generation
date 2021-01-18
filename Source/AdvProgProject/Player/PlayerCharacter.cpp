@@ -8,6 +8,9 @@
 // global constants
 const static float MAX_CAMERA_HEIGHT = 100.f;
 const static float MAX_CAMERA_PITCH_LIMIT = 90.f;
+const static FVector DEFAULT_REQUIRED_GUN_LOCATION = FVector(12.f, 10.f, -12.f);
+const static FQuat DEFAULT_REQUIRED_GUN_ROTATION = FRotator(0.f, 0.f, 90.f).Quaternion();
+const static float DEFAULT_REQUIRED_GUN_SCALE = 0.2f;
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -15,15 +18,18 @@ APlayerCharacter::APlayerCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Here we create the camera component for the player and set it's parent and camera
-	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Player Camera"));
-	PlayerCamera->SetupAttachment(this->RootComponent);
-	PlayerCamera->SetRelativeLocation(FVector(0, 0, CameraHeight));
-	Gun = CreateDefaultSubobject<UGun>(TEXT("Gun"));
-	Gun->SetupAttachment(PlayerCamera);
-	Gun->PlayerCamera = PlayerCamera;
-	Gun->PlayerController = Cast<APlayerController>(GetController());
-
+	// We first make the player camera
+	UCameraComponent* CustomCamera = CreateCamera();
+	// And then the gun using the returned reference
+	CreateGun(CustomCamera);
+	
+	GunTransform.SetLocation(DEFAULT_REQUIRED_GUN_LOCATION);
+	GunTransform.SetRotation(DEFAULT_REQUIRED_GUN_ROTATION);
+	GunTransform.SetScale3D(FVector(DEFAULT_REQUIRED_GUN_SCALE));
+	
+	// We also need to create the sphere components that overlap the enemies
+	CreateEnemySpheres();
+	
 	// We make sure the player possesses the actor, and set the basic input settings
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 	bUseControllerRotationYaw = false;
@@ -34,7 +40,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
 	// Here we'll make sure the gun is in the right place for the player
-	Gun->CustomOnConstruction(GunMesh, GunTransform, FireRate, GunshotParticles, GunshotSound, GunshotRange);
+	Gun->CustomOnConstruction(GunMesh, GunTransform, GunDamage, FireRate, GunshotParticles, GunshotSound, GunshotRange);
 	
 	// Here we'll make sure all our values stay in a valid range
 	CameraHeight = FMath::Clamp(CameraHeight, 1.f, MAX_CAMERA_HEIGHT);
@@ -44,6 +50,14 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 	BaseSpeed = FMath::Clamp(BaseSpeed, 1.f, BaseSpeed);
 	JumpHeight = FMath::Clamp(JumpHeight, 1.f, JumpHeight);
 	FireRate = FMath::Clamp(FireRate, 0.01f, FireRate);
+
+	// Valid range for the spheres means that the size order between them stays the same
+	EnemyActivationSphereRadius = FMath::Clamp(EnemyActivationSphereRadius, EnemyGunshotSphereRadius, EnemyActivationSphereRadius);
+	EnemyGunshotSphereRadius = FMath::Clamp(EnemyGunshotSphereRadius, EnemySightSphereRadius, EnemyActivationSphereRadius);
+	EnemySightSphereRadius = FMath::Clamp(EnemySightSphereRadius, 1.f, EnemyGunshotSphereRadius);
+	EnemyActivationSphere->SetSphereRadius(EnemyActivationSphereRadius, true);
+	EnemyGunshotSphere->SetSphereRadius(EnemyGunshotSphereRadius, true);
+	EnemySightSphere->SetSphereRadius(EnemySightSphereRadius, true);
 }
 
 // Called when the game starts or when spawned
@@ -99,6 +113,57 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	InputComponent->BindAction<FToggleState>("Fire", EInputEvent::IE_Released, Gun, &UGun::ToggleFire, false);
 }
 
+// COMPONENT SETUP
+// Creates the enemy interaction spheres
+void APlayerCharacter::CreateEnemySpheres()
+{
+	// Here we create the enemy spheres and parent them to the root of the player for locked movement
+	EnemyActivationSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Activation Sphere"));
+	EnemyGunshotSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Gunshot Sphere"));
+	EnemySightSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Sight Sphere"));
+	EnemyActivationSphere->SetupAttachment(this->RootComponent);
+	EnemyGunshotSphere->SetupAttachment(this->RootComponent);
+	EnemySightSphere->SetupAttachment(this->RootComponent);
+
+	// This binds their overlap and end overlap to event dispatcher functions
+	EnemyActivationSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
+	EnemyActivationSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
+	EnemyGunshotSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
+	EnemyGunshotSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
+	EnemySightSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
+	EnemySightSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
+}
+// These three are used to announce when an enemy overlaps with a sphere
+void APlayerCharacter::OnSphereOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AZombie* TestZombie = Cast<AZombie>(OtherActor);
+	if (TestZombie) OnSphereOverlap.Broadcast(TestZombie, HitComp);
+}
+// These three are used to announce when an enemy ends overlap with a sphere
+void APlayerCharacter::OnSphereEndOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	AZombie* TestZombie = Cast<AZombie>(OtherActor);
+	if (TestZombie) OnSphereEndOverlap.Broadcast(TestZombie, HitComp);
+}
+// Creates the camera and returns a reference for the gun
+UCameraComponent* APlayerCharacter::CreateCamera()
+{
+	// Here we create the camera component for the player and set it's parent
+	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Player Camera"));
+	PlayerCamera->SetupAttachment(this->RootComponent);
+	PlayerCamera->SetRelativeLocation(FVector(0, 0, CameraHeight));
+	return PlayerCamera;
+}
+// Creates the gun using the CreateCamera() reference for the aiming
+void APlayerCharacter::CreateGun(UCameraComponent* InCamera)
+{
+	// We also set the gun here to parent to the camera, so it turns with the layer
+	Gun = CreateDefaultSubobject<UGun>(TEXT("Gun"));
+	Gun->SetupAttachment(InCamera);
+	Gun->PlayerCamera = InCamera;
+	Gun->PlayerController = Cast<APlayerController>(GetController());
+}
+
 // INPUTS
 // Makes the player move left or right
 void APlayerCharacter::MoveX(float AxisValue) { if (AxisValue) AddMovementInput(GetActorRightVector(), AxisValue); }
@@ -141,7 +206,7 @@ void APlayerCharacter::ToggleRun(bool Running)
 // Crouches the player down
 void APlayerCharacter::ToggleCrouch(bool Crouching)
 {
-	// If the player shoudl be crouching, they stop running and/or jumping, and start crouching
+	// If the player should be crouching, they stop running and/or jumping, and start crouching
 	if (Crouching)
 	{
 		if (!IsCrouching)
@@ -169,6 +234,15 @@ void APlayerCharacter::ToggleJump(bool Jumping)
 	// This simply toggles whether or not the player should be jumping
 	if (Jumping) { IsJumping = true; }
 	else { IsJumping = false; }
+}
+
+// ATTACKS
+// Used to tell the player they have been attacked by a zombie
+void APlayerCharacter::RecieveAttack(float Damage)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, "Player took " + FString::SanitizeFloat(Damage) + " damage");
+	Health -= Damage;
+	if (Health <= 0.f) OnPlayerDeath.Broadcast();
 }
 
 // DEBUG

@@ -9,6 +9,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Gun.generated.h"
 
+// Delegate to alert the world that the gun has been fired
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGunshot);
 
 UCLASS()
 class ADVPROGPROJECT_API UGun : public UStaticMeshComponent
@@ -31,6 +33,8 @@ public:
 
 	// Firing variables
 	UPROPERTY()
+		float Damage = 20.f;
+	UPROPERTY()
 		float FireRate = 0.5f;
 	UPROPERTY()
 		float TimeSinceLastFire = 0.f;
@@ -44,9 +48,11 @@ public:
 		UAudioComponent* GunshotSoundComponent = nullptr;
 	UPROPERTY()
 		USoundBase* GunshotSound = nullptr;
+	UPROPERTY()
+		FOnGunshot OnGunshot;
 	
 	// Called when a value changes
-	void CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange);
+	void CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange);
 
 	// Called every frame
 	void CustomTick(float DeltaTime);

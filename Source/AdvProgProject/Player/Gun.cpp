@@ -2,6 +2,8 @@
 
 
 #include "Gun.h"
+
+#include "AdvProgProject/Enemies/Zombie.h"
 #include "Components/AudioComponent.h"
 #include "PlayerCharacter.h"
 #include "DrawDebugHelpers.h"
@@ -25,9 +27,10 @@ UGun::UGun()
 }
 
 // Called when a value changes
-void UGun::CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange)
+void UGun::CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange)
 {
 	SetRelativeTransform(GunTransform);
+	Damage = GunDamage;
 	GunshotRange = InGunshotRange;
 	FireRate = InFireRate;
 	GunshotParticleSystem->SetTemplate(GunshotParticles);
@@ -70,11 +73,17 @@ void UGun::Fire()
 	
 	if (GetWorld()->LineTraceSingleByChannel(HitEnemy, RayStart, RayEnd, ECC_Visibility, CollisionParameters))
 	{
-		if (HitEnemy.bBlockingHit) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "HIT: " + HitEnemy.GetActor()->GetName());
+		AZombie* ZombieTest = Cast<AZombie>(HitEnemy.GetActor());
+		if (ZombieTest)
+		{
+			ZombieTest->RecieveAttack(Damage);
+			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "HIT: " + HitEnemy.GetActor()->GetName());
+		}
 	}
 	
 	// TODO: Add Gun firing code
 	GunshotSoundComponent->Play();
 	GunshotParticleSystem->Activate(true);
+	OnGunshot.Broadcast();
 	TimeSinceLastFire = FireRate;
 }

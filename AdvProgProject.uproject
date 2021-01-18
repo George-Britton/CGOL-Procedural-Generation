@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"Landscape",
-				"AIModule"
+				"AIModule",
+				"CoreUObject"
 			]
 		}
 	]
