@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Camera/CameraComponent.h"
-#include "CoreMinimal.h"
 #include "Engine.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/StaticMeshComponent.h"

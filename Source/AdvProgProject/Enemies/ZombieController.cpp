@@ -6,22 +6,29 @@
 #include "Zombie.h"
 
 // Used to start the zombie moving towards the player
-bool AZombieController::ToggleMoveToPlayer(APlayerCharacter* Player, bool Chasing)
+bool AZombieController::ToggleMoveToPlayer(APlayerCharacter* Player, bool Chasing, bool Idle)
 {
 	if (Chasing)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, ParentZombie->GetName() + " chasing");
 		StopMovement();
-		ParentZombie->SetActorTickEnabled(true);
+		ParentZombie->ToggleRender(true);
 		MoveToActor(Player, 50.f, false, true, true);
 		ParentZombie->ZombieState = EZombieState::CHASING;
+		ParentZombie->OnZombieStateChange.Broadcast(EZombieState::CHASING);
 		return true;
 	}
 	else
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, ParentZombie->GetName() + " stopped chasing");
 		StopMovement();
-		ParentZombie->ZombieState = EZombieState::IDLE;
 		ParentZombie->ZombieAttackCountdown = 0.f;
-		ParentZombie->SetActorTickEnabled(false);
+		if (Idle)
+		{
+			ParentZombie->SetActorTickEnabled(false);
+			ParentZombie->ZombieState = EZombieState::IDLE;
+			ParentZombie->OnZombieStateChange.Broadcast(EZombieState::IDLE);
+		}
 		return false;
 	}
 }
@@ -30,12 +37,14 @@ bool AZombieController::ToggleAttackPlayer(APlayerCharacter* Player, bool Attack
 {
 	if (Attacking)
 	{
-		ParentZombie->ToggleMoveToPlayer(false);
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, ParentZombie->GetName() + " attacking");
 		ParentZombie->ZombieState = EZombieState::ATTACKING;
+		ParentZombie->OnZombieStateChange.Broadcast(EZombieState::ATTACKING);
 		return true;
 	}
 	else
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, ParentZombie->GetName() + " stopped attacking");
 		ParentZombie->ToggleMoveToPlayer(true);
 		return false;
 	}

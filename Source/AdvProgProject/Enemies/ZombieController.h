@@ -6,9 +6,6 @@
 #include "AIController.h"
 #include "ZombieController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class ADVPROGPROJECT_API AZombieController : public AAIController
 {
@@ -20,7 +17,7 @@ public:
 		class AZombie* ParentZombie;
 	
 	// Used to start the zombie moving towards the player
-	bool ToggleMoveToPlayer(class APlayerCharacter* Player, bool Chasing);
+	bool ToggleMoveToPlayer(class APlayerCharacter* Player, bool Chasing, bool Idle = false);
 	// Used to stop the chase and attack the player
 	bool ToggleAttackPlayer(APlayerCharacter* Player, bool Attacking);
 };

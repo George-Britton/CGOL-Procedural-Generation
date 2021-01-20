@@ -6,6 +6,8 @@
 #include "Helicopter.h"
 #include "Sea.h"
 #include "City.h"
+#include "Kismet/GameplayStatics.h"
+#include "AdvProgProject/Player/PlayerCharacter.h"
 
 // DEFAULT
 // Sets default values
@@ -41,6 +43,7 @@ void ACityGenerator::BeginPlay()
 	CreateSea();
 	CreateForest();
 	OnCityReady.Broadcast();
+	Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()))->InitialisePlayer();
 }
 
 // CREATES EXTERNAL ACTORS

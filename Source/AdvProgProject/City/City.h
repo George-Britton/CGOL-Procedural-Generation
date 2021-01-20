@@ -68,7 +68,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "City|Road")
 		UMaterial* RoadMaterial = nullptr;
 	UPROPERTY()
-		UInstancedStaticMeshComponent* RoadComponent = nullptr;
+		UStaticMeshComponent* RoadComponent = nullptr;
 
 	// ENDING
 	// These variables are used to populate the ending tile of the grid
@@ -112,7 +112,7 @@ private:
 	bool BuildCity();
 	void PlaceBuilding(FTransform PlacementTransform, float BuildingWidth);
 	void PlaceProp(FTransform PlacementTransform, float BuildingWidth);
-	void PlaceRoad(FTransform PlacementTransform, float BuildingWidth);
+	void PlaceRoad();
 
 	// Sets up the helicopter ending space
 	void CreateHelicopter();

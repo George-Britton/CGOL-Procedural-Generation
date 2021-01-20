@@ -13,7 +13,7 @@ ACity::ACity()
 	// We now construct the components and attach them all to the root
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
 	CityBuildingISMComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("City Building Instanced Static Mesh Component"));
-	RoadComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Road Component"));
+	RoadComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Road Component"));
 	CityBuildingISMComponent->SetupAttachment(this->RootComponent);
 	RoadComponent->SetupAttachment(this->RootComponent);
 }
@@ -52,10 +52,10 @@ void ACity::SanitizeInput()
 	// We also clamp the prop spawn percent to between 0 and 100
 	PropSpawnProbability = FMath::Clamp(PropSpawnProbability, 0.f, 100.f);
 
-	// Sets the static meshes to be instanced in the city
+	// Sets the static meshes to be used in the city
 	if (CityBuilding) CityBuildingISMComponent->SetStaticMesh(CityBuilding);
-	//if (RoadMesh) RoadComponent->SetStaticMesh(RoadMesh);
-	//if (RoadMaterial) RoadComponent->SetMaterial(0, RoadMaterial);
+	if (RoadMesh) RoadComponent->SetStaticMesh(RoadMesh);
+	if (RoadMaterial) RoadComponent->SetMaterial(0, RoadMaterial);
 
 	// We create the cell life rules array
 	if (CellLifeRules.Num() == 0) CellLifeRules.Init(FCellLifeRule::FCellLifeRule(), 9);
@@ -85,6 +85,7 @@ void ACity::BeginCreateCity()
 
 	// We then populate the city
 	BuildCity();
+	PlaceRoad();
 }
 
 // GENERATION
@@ -99,7 +100,7 @@ void ACity::CreatePropComponents()
 	{
 		PropComponentArray[PropLooper] = Cast<UInstancedStaticMeshComponent>(StaticConstructObject_Internal(UInstancedStaticMeshComponent::StaticClass(), this));
 		PropComponentArray[PropLooper]->RegisterComponent();
-		PropComponentArray[PropLooper]->SetupAttachment(this->RootComponent);
+		PropComponentArray[PropLooper]->AttachTo(this->RootComponent);
 		PropComponentArray[PropLooper]->SetStaticMesh(PropArray[PropLooper]);
 		PropComponentArray[PropLooper]->SetWorldLocation(this->GetActorLocation());
 	}
@@ -292,7 +293,6 @@ bool ACity::BuildCity()
 		if (PopulationGrid[GridSquare]) PlaceBuilding(GridTransform, BuildingWidth);
 		else if (GridSquare != EndingPosition && GridSquare != StartingPosition)
 		{
-			PlaceRoad(GridTransform, BuildingWidth);
 			if (FMath::RandRange(0.f, 99.9f) < PropSpawnProbability && PropArray.Num()) PlaceProp(GridTransform, BuildingWidth);
 		}
 	}
@@ -321,11 +321,11 @@ void ACity::PlaceProp(FTransform PlacementTransform, float BuildingWidth)
 	// We then place the prop
 	PropComponentArray[ChosenProp]->AddInstance(PlacementTransform);
 }
-void ACity::PlaceRoad(FTransform PlacementTransform, float BuildingWidth)
+void ACity::PlaceRoad()
 {
-	PlacementTransform.SetRotation(FRotator(0, FMath::RandRange(0, 3) * 90, 0).Quaternion());
-	PlacementTransform.SetScale3D(FVector(RoadMesh->GetBoundingBox().GetSize().X / BuildingWidth));
-	RoadComponent->AddInstance(PlacementTransform);
+	float RelativeScale = CityBuilding->GetBoundingBox().GetSize().X / RoadMesh->GetBoundingBox().GetSize().X;
+	RoadComponent->SetRelativeScale3D(FVector(RelativeScale * Rows, RelativeScale * Columns, 1));
+	RoadComponent->AddLocalOffset(RoadComponent->GetRelativeScale3D(), false);
 }
 
 // Sets up the helicopter ending space

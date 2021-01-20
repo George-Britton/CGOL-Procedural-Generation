@@ -60,13 +60,9 @@ void UGun::ToggleFire(bool Firing)
 // Executes a fire from the gun
 void UGun::Fire()
 {
-	FVector WorldLoc;
-	FVector WorldDir;
-	PlayerController->DeprojectScreenPositionToWorld(0.5f, 0.5f, WorldLoc, WorldDir);
-		
 	FHitResult HitEnemy;
 	FVector RayStart = PlayerCamera->GetComponentLocation();
-	FVector RayEnd = WorldLoc;
+	FVector RayEnd = RayStart + (PlayerCamera->GetForwardVector() * GunshotRange);
 	FCollisionQueryParams CollisionParameters;
 
 	DrawDebugLine(GetWorld(), RayStart, RayEnd, FColor::Red, false, 2, 0, 1);
@@ -76,14 +72,14 @@ void UGun::Fire()
 		AZombie* ZombieTest = Cast<AZombie>(HitEnemy.GetActor());
 		if (ZombieTest)
 		{
+			//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "HIT: " + HitEnemy.GetActor()->GetName());
 			ZombieTest->RecieveAttack(Damage);
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "HIT: " + HitEnemy.GetActor()->GetName());
 		}
 	}
 	
-	// TODO: Add Gun firing code
+	// This makes the gun seem like it's firing, with the sound, particles, and announcing to the zombies that it's been fired
 	GunshotSoundComponent->Play();
 	GunshotParticleSystem->Activate(true);
-	OnGunshot.Broadcast();
+	//OnGunshot.Broadcast();
 	TimeSinceLastFire = FireRate;
 }

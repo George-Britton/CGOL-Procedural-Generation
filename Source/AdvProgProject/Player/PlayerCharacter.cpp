@@ -6,12 +6,13 @@
 #include "Components/CapsuleComponent.h"
 #include "AdvProgProject/Config/APGameMode.h"
 #include "AdvProgProject/Enemies/ZombieManager.h"
+#include "AdvProgProject/City/CityGenerator.h"
 
 // global constants
 const static float MAX_CAMERA_HEIGHT = 100.f;
 const static float MAX_CAMERA_PITCH_LIMIT = 90.f;
 const static FVector DEFAULT_REQUIRED_GUN_LOCATION = FVector(12.f, 10.f, -12.f);
-const static FQuat DEFAULT_REQUIRED_GUN_ROTATION = FRotator(0.f, 0.f, 90.f).Quaternion();
+const static FQuat DEFAULT_REQUIRED_GUN_ROTATION = FRotator(0.f, -90.f, 0.f).Quaternion();
 const static float DEFAULT_REQUIRED_GUN_SCALE = 0.2f;
 
 // Sets default values
@@ -19,6 +20,7 @@ APlayerCharacter::APlayerCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	// We first make the player camera
 	UCameraComponent* CustomCamera = CreateCamera();
@@ -67,10 +69,8 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// We tell the zombie manager that this is the player
-	AAPGameMode* GameMode = Cast<AAPGameMode>(UGameplayStatics::GetGameMode(this));
-	GameMode->Player = this;
-	Cast<UZombieManager>(GameMode)->InitialiseActors(this);
+	// Here we makes sure the player is alerted when the city is ready, so it can initialise the player with the zombies and gamemode
+	Cast<ACityGenerator>(UGameplayStatics::GetActorOfClass(this, ACityGenerator::StaticClass()))->OnCityReady.AddDynamic(this, &APlayerCharacter::InitialisePlayer);
 
 	// If the gun is destroyed due to no mesh, we call this
 	if (!Gun)
@@ -81,6 +81,22 @@ void APlayerCharacter::BeginPlay()
 
 		// We then bind the input action to the print debug function with a message saying that there is no gun
 		InputComponent->BindAction<FDebugDelegate>("Fire", EInputEvent::IE_Pressed, this, &APlayerCharacter::PrintDebugMessage, FString("Error: No Gun - Possibly caused by no gun mesh set on player character"));
+	}
+}
+
+// Called to intialised the player with the managing systems
+void APlayerCharacter::InitialisePlayer()
+{
+	// We tell the zombie manager that this is the player
+	AAPGameMode* AdvProgGameMode = nullptr;
+	while (!AdvProgGameMode) {
+		AdvProgGameMode = Cast<AAPGameMode>(UGameplayStatics::GetGameMode(this));
+		if (AdvProgGameMode)
+		{
+			AdvProgGameMode->Player = this;
+			AdvProgGameMode->ZombieManager->InitialiseActors(this);
+		}
+		else PrintDebugMessage("Error: gamemode not found by PlayerCharacter");
 	}
 }
 
@@ -143,6 +159,7 @@ void APlayerCharacter::CreateEnemySpheres()
 // These three are used to announce when an enemy overlaps with a sphere
 void APlayerCharacter::OnSphereOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	PrintDebugMessage("OnSphereOverlap : " + OtherActor->GetName());
 	AZombie* TestZombie = Cast<AZombie>(OtherActor);
 	if (TestZombie) OnPlayerSphereOverlap.Broadcast(TestZombie, HitComp);
 }
@@ -250,6 +267,23 @@ void APlayerCharacter::RecieveAttack(float Damage)
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, "Player took " + FString::SanitizeFloat(Damage) + " damage");
 	Health -= Damage;
 	if (Health <= 0.f) OnPlayerDeath.Broadcast();
+}
+// Used to tell the zombie they are overlapping with the player
+void APlayerCharacter::OnZombieOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->GetName().Contains("Zombie"))
+	{
+		Cast<AZombie>(OtherActor)->ToggleAttackPlayer(true);
+		PrintDebugMessage(OtherActor->GetName() + " + " + OverlappedComponent->GetName());
+	}
+}
+void APlayerCharacter::OnZombieEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->GetName().Contains("Zombie")) 
+	{
+		Cast<AZombie>(OtherActor)->ToggleAttackPlayer(false);
+		PrintDebugMessage(OtherActor->GetName() + " - " + OverlappedComponent->GetName());
+	}
 }
 
 // DEBUG

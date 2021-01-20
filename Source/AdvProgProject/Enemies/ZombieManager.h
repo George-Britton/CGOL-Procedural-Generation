@@ -6,7 +6,7 @@
 #include "Zombie.h"
 #include "ZombieManager.generated.h"
 
-
+// We must use multiple inheritence here to ensure that our base UObject is tickable
 UCLASS()
 class ADVPROGPROJECT_API UZombieManager : public UObject
 {
@@ -14,20 +14,25 @@ class ADVPROGPROJECT_API UZombieManager : public UObject
 
 public:
 	// Standard constructor
-	UZombieManager(){};
+	UZombieManager() {};
 
 	// Reference to the player for raytracing
 	UPROPERTY()
 		class APlayerCharacter* Player = nullptr;
 
-	// These are arrays referencing which zombies are within the player's spheres
-	UPROPERTY()
-		TArray<AZombie*> ZombiesWithinActivationSphere;
+	// This array references which zombies are within the player's gunshot sphere
 	UPROPERTY()
 		TArray<AZombie*> ZombiesWithinGunshotSphere;
-	UPROPERTY()
-		TArray<AZombie*> ZombiesWithinChaseSphere;
 
+	// Used to tell if the manager is ready to start ray tracing to the player
+	UPROPERTY()
+		bool IsReady = false;
+	UPROPERTY()
+		float RayTraceTimer = 0.f;
+	UPROPERTY()
+		float RayTraceFrequency = 2.f;
+	
+public:
 	// INITIALISATION
 	// This takes in the player as a world context reference and uses it to intialise the zombies
 	void InitialiseActors(APlayerCharacter* InPlayer);
@@ -42,16 +47,12 @@ public:
 	// Used to check all the zombies at the beginning to see what they should be involved in
 	void InitialiseZombies();
 	// Checks the spheres to see which ones the zombies should be in
-	bool AssessSpheres(float Distance, AZombie* Zombie);
+	void AssessSpheres(float Distance, AZombie* Zombie);
 
 	// BEHAVIOUR
-	// Used to tell the zombie whether or not it should be rendering
-	void CheckIfZombieShouldRender(AZombie* Zombie);
 	// Used to tell zombies to chase gunfire
 	UFUNCTION()
 		void SendZombiesInRadiusToGunshot();
-	// Used to tell the zombie to chase the player on sight
-	void ChasePlayerIfInLineOfSight(AZombie* Zombie);
 
 	// LIFE
 	// Used to tell the manager to get rid of a dead zombie

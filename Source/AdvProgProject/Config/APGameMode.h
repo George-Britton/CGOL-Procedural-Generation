@@ -14,7 +14,7 @@ class ADVPROGPROJECT_API AAPGameMode : public AGameModeBase
 	GENERATED_BODY()
 	
 public:
-	// standard constructor
+	// Standard constructor
 	AAPGameMode();
 
 	// Reference to the player for the loading and world management
@@ -24,5 +24,5 @@ public:
 	// Controlled zombie manager
 	UPROPERTY()
 		UZombieManager* ZombieManager = nullptr;
-	
+
 };

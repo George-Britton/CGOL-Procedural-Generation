@@ -8,8 +8,6 @@
 #include "AdvProgProject/Enemies/Zombie.h"
 #include "PlayerCharacter.generated.h"
 
-//class AZombie;
-
 // We create a new delegate type the debug message function
 DECLARE_DELEGATE_OneParam(FDebugDelegate, FString);
 // We create delegate for the toggling of boolean states
@@ -104,6 +102,9 @@ protected:
 	void OnConstruction(const FTransform& Transform) override;
 	
 public:
+	// Called to intialised the player with the managing systems
+	void InitialisePlayer();
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -143,6 +144,9 @@ public:
 	// ATTACKS
 	// Used to tell the player they have been attacked by a zombie
 	void RecieveAttack(float Damage);
+	// Used to tell the zombie they are overlapping with the player
+	void OnZombieOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void OnZombieEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// DEBUG
 	// This function is used to print errors that occur during runtime
