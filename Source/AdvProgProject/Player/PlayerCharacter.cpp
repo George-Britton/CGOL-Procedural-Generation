@@ -58,17 +58,19 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 	// Valid range for the spheres means that the size order between them stays the same
 	EnemyActivationSphereRadius = FMath::Clamp(EnemyActivationSphereRadius, EnemyGunshotSphereRadius, EnemyActivationSphereRadius);
 	EnemyGunshotSphereRadius = FMath::Clamp(EnemyGunshotSphereRadius, EnemySightSphereRadius, EnemyActivationSphereRadius);
-	EnemySightSphereRadius = FMath::Clamp(EnemySightSphereRadius, 1.f, EnemyGunshotSphereRadius);
+	EnemySightSphereRadius = FMath::Clamp(EnemySightSphereRadius, EnemyAttackSphereRadius, EnemyGunshotSphereRadius);
+	EnemyAttackSphereRadius = FMath::Clamp(EnemyAttackSphereRadius, 1.f, EnemySightSphereRadius);
 	EnemyActivationSphere->SetSphereRadius(EnemyActivationSphereRadius, true);
 	EnemyGunshotSphere->SetSphereRadius(EnemyGunshotSphereRadius, true);
 	EnemySightSphere->SetSphereRadius(EnemySightSphereRadius, true);
+	EnemyAttackSphere->SetSphereRadius(EnemyAttackSphereRadius, true);
 }
 
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	// Here we makes sure the player is alerted when the city is ready, so it can initialise the player with the zombies and gamemode
 	Cast<ACityGenerator>(UGameplayStatics::GetActorOfClass(this, ACityGenerator::StaticClass()))->OnCityReady.AddDynamic(this, &APlayerCharacter::InitialisePlayer);
 
@@ -144,9 +146,11 @@ void APlayerCharacter::CreateEnemySpheres()
 	EnemyActivationSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Activation Sphere"));
 	EnemyGunshotSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Gunshot Sphere"));
 	EnemySightSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Sight Sphere"));
+	EnemyAttackSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Attack Sphere"));
 	EnemyActivationSphere->SetupAttachment(this->RootComponent);
 	EnemyGunshotSphere->SetupAttachment(this->RootComponent);
 	EnemySightSphere->SetupAttachment(this->RootComponent);
+	EnemyAttackSphere->SetupAttachment(this->RootComponent);
 
 	// This binds their overlap and end overlap to event dispatcher functions
 	EnemyActivationSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
@@ -155,11 +159,12 @@ void APlayerCharacter::CreateEnemySpheres()
 	EnemyGunshotSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
 	EnemySightSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
 	EnemySightSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
+	EnemyAttackSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
+	EnemyAttackSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
 }
 // These three are used to announce when an enemy overlaps with a sphere
 void APlayerCharacter::OnSphereOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	PrintDebugMessage("OnSphereOverlap : " + OtherActor->GetName());
 	AZombie* TestZombie = Cast<AZombie>(OtherActor);
 	if (TestZombie) OnPlayerSphereOverlap.Broadcast(TestZombie, HitComp);
 }
@@ -264,27 +269,14 @@ void APlayerCharacter::ToggleJump(bool Jumping)
 // Used to tell the player they have been attacked by a zombie
 void APlayerCharacter::RecieveAttack(float Damage)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, "Player took " + FString::SanitizeFloat(Damage) + " damage");
 	Health -= Damage;
 	if (Health <= 0.f) OnPlayerDeath.Broadcast();
 }
 // Used to tell the zombie they are overlapping with the player
 void APlayerCharacter::OnZombieOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor->GetName().Contains("Zombie"))
-	{
-		Cast<AZombie>(OtherActor)->ToggleAttackPlayer(true);
-		PrintDebugMessage(OtherActor->GetName() + " + " + OverlappedComponent->GetName());
-	}
-}
+{ if (OtherActor->GetName().Contains("Zombie")) Cast<AZombie>(OtherActor)->ToggleAttackPlayer(true); }
 void APlayerCharacter::OnZombieEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor->GetName().Contains("Zombie")) 
-	{
-		Cast<AZombie>(OtherActor)->ToggleAttackPlayer(false);
-		PrintDebugMessage(OtherActor->GetName() + " - " + OverlappedComponent->GetName());
-	}
-}
+{ if (OtherActor->GetName().Contains("Zombie")) Cast<AZombie>(OtherActor)->ToggleAttackPlayer(false); }
 
 // DEBUG
 // This function is used to print errors that occur during runtime

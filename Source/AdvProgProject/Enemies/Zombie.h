@@ -63,6 +63,10 @@ public:
 		float ZombieAttackSpeed = 1.f;
 	UPROPERTY()
 		float ZombieAttackCountdown = 0.f;
+	UPROPERTY(EditAnywhere, Category = "Attack")
+		USoundBase* RoarSound = nullptr;
+	UPROPERTY()
+		UAudioComponent* RoarSoundComponent = nullptr;
 
 protected:
 	// Called when the game starts or when spawned
@@ -76,7 +80,8 @@ public:
 	// Used to set the render of the zombie
 	void ToggleRender(bool Rendering);
 	// Used to set the zombie to chase down the player
-	void ToggleMoveToPlayer(bool Chasing, bool Idle = false);
+	void ToggleMoveToPlayer(bool Chasing, bool Idle = false, bool Roar = true);
+	void Roar();
 	// Used to make the zombie attack the player
 	void ToggleAttackPlayer(bool Attacking);
 	void Attack();

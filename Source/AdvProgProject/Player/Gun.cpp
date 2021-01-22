@@ -7,7 +7,6 @@
 #include "Components/AudioComponent.h"
 #include "PlayerCharacter.h"
 #include "DrawDebugHelpers.h"
-#include "GameFramework/PlayerController.h"
 
 // Sets default values
 UGun::UGun()

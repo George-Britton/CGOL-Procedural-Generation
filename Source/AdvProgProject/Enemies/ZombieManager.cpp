@@ -29,11 +29,10 @@ void UZombieManager::InitialiseActors(APlayerCharacter* InPlayer)
 // Used to add zombies to the appropriate arrays
 void UZombieManager::OnSphereOverlap(AZombie* Zombie, UPrimitiveComponent* Sphere)
 {
-	if (Sphere->GetName().Contains("Activation"))
-	{ Zombie->ToggleRender(true); }
-	else if (Sphere->GetName().Contains("Gunshot"))
-	{ ZombiesWithinGunshotSphere.AddUnique(Zombie); }
-	else if (Sphere->GetName().Contains("Sight")) Zombie->ToggleMoveToPlayer(true);
+	if (Sphere->GetName().Contains("Activation")) { Zombie->ToggleRender(true); }
+	else if (Sphere->GetName().Contains("Gunshot")) { ZombiesWithinGunshotSphere.AddUnique(Zombie); }
+	else if (Sphere->GetName().Contains("Sight")) { Zombie->ToggleMoveToPlayer(true, false, true); }
+	else if (Sphere->GetName().Contains("Attack")) { Zombie->ToggleAttackPlayer(true); }
 }
 // Used to remove zombies from the appropriate arrays
 void UZombieManager::OnSphereEndOverlap(AZombie* Zombie, UPrimitiveComponent* Sphere)
@@ -42,8 +41,8 @@ void UZombieManager::OnSphereEndOverlap(AZombie* Zombie, UPrimitiveComponent* Sp
 	{
 		Zombie->ToggleMoveToPlayer(false);
 		Zombie->ToggleRender(false);
-	} else if (Sphere->GetName().Contains("Gunshot"))
-	{ ZombiesWithinGunshotSphere.Remove(Zombie); }
+	} else if (Sphere->GetName().Contains("Gunshot")) { ZombiesWithinGunshotSphere.Remove(Zombie); }
+	else if (Sphere->GetName().Contains("Attack")) { Zombie->ToggleAttackPlayer(false); }
 }
 // Used to check all the zombies at the beginning to see what they should be involved in
 void UZombieManager::InitialiseZombies()
@@ -60,17 +59,16 @@ void UZombieManager::InitialiseZombies()
 }
 // Checks the zombie's gunshot distance
 void UZombieManager::AssessSpheres(float Distance, AZombie* Zombie)
-{ if (Distance <= Player->EnemyGunshotSphereRadius) ZombiesWithinGunshotSphere.AddUnique(Zombie); }
+{
+	if (Distance <= Player->EnemyGunshotSphereRadius) ZombiesWithinGunshotSphere.AddUnique(Zombie);
+	if (Distance > Player->EnemyActivationSphereRadius) Zombie->ToggleRender(false);
+}
 
 // BEHAVIOUR
 // Used to tell zombies to chase gunfire
 void UZombieManager::SendZombiesInRadiusToGunshot()
-{
-	for (auto& Zombie : ZombiesWithinGunshotSphere)
-	{ Zombie->ToggleMoveToPlayer(true); }
-}
+{ for (auto& Zombie : ZombiesWithinGunshotSphere) { Zombie->ToggleMoveToPlayer(true); }}
 
 // LIFE
 // Used to tell the manager to get rid of a dead zombie
-void UZombieManager::RemoveZombie(AZombie* Zombie)
-{ ZombiesWithinGunshotSphere.Remove(Zombie); }
+void UZombieManager::RemoveZombie(AZombie* Zombie) { ZombiesWithinGunshotSphere.Remove(Zombie); }

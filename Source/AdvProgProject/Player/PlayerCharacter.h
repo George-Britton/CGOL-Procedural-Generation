@@ -83,12 +83,16 @@ public:
 		float EnemyGunshotSphereRadius = 5000.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 		float EnemySightSphereRadius = 2500.f;
-	UPROPERTY(VisibleAnywhere, Category = "Enemies")
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		float EnemyAttackSphereRadius = 75;
+	UPROPERTY()
 		USphereComponent* EnemyActivationSphere = nullptr;
-	UPROPERTY(VisibleAnywhere, Category = "Enemies")
+	UPROPERTY()
 		USphereComponent* EnemyGunshotSphere = nullptr;
-	UPROPERTY(VisibleAnywhere, Category = "Enemies")
+	UPROPERTY()
 		USphereComponent* EnemySightSphere = nullptr;
+	UPROPERTY()
+		USphereComponent* EnemyAttackSphere = nullptr;
 	UPROPERTY(BlueprintAssignable, Category = "Enemies")
 		FOnPlayerSphereOverlap OnPlayerSphereOverlap;
 	UPROPERTY(BlueprintAssignable, Category = "Enemies")

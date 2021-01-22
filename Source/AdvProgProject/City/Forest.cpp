@@ -77,8 +77,8 @@ void AForest::PlantTrees(float BuildingWidth)
 bool AForest::ValidateTreeDistance(FVector TreeLocation, float BuildingWidth)
 {
 	// If the tree is within the city, return false
-	if (TreeLocation.X >= -0.25f * BuildingWidth && TreeLocation.X <= (Columns * BuildingWidth) + (BuildingWidth * 1.25f)
-		&& TreeLocation.Y >= -0.25 * BuildingWidth && TreeLocation.Y <= (Rows * BuildingWidth) + (BuildingWidth * 1.25f))
+	if (TreeLocation.X >= -0.25f * BuildingWidth && TreeLocation.X <= (Columns * BuildingWidth) + (BuildingWidth * 0.25f)
+		&& TreeLocation.Y >= -0.25 * BuildingWidth && TreeLocation.Y <= (Rows * BuildingWidth) + (BuildingWidth * 0.25f))
 		return false;
 
 	if (ForestFalloff > 0)

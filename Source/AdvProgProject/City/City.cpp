@@ -325,7 +325,7 @@ void ACity::PlaceRoad()
 {
 	float RelativeScale = CityBuilding->GetBoundingBox().GetSize().X / RoadMesh->GetBoundingBox().GetSize().X;
 	RoadComponent->SetRelativeScale3D(FVector(RelativeScale * Rows, RelativeScale * Columns, 1));
-	RoadComponent->AddLocalOffset(RoadComponent->GetRelativeScale3D(), false);
+	RoadComponent->AddLocalOffset(RoadComponent->GetRelativeScale3D() * (Rows / 2), false);
 }
 
 // Sets up the helicopter ending space
