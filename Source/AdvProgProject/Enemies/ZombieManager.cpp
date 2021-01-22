@@ -4,6 +4,7 @@
 #include "ZombieManager.h"
 #include "AdvProgProject/Player/PlayerCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "ZombieSpawner.h"
 
 
 // INITIALISATION
@@ -21,7 +22,7 @@ void UZombieManager::InitialiseActors(APlayerCharacter* InPlayer)
 
 	
 	// Here we make sure the zombies register with the correct arrays
-	InitialiseZombies();
+	InitialiseZombies(nullptr);
 	IsReady = true;
 }
 
@@ -45,16 +46,28 @@ void UZombieManager::OnSphereEndOverlap(AZombie* Zombie, UPrimitiveComponent* Sp
 	else if (Sphere->GetName().Contains("Attack")) { Zombie->ToggleAttackPlayer(false); }
 }
 // Used to check all the zombies at the beginning to see what they should be involved in
-void UZombieManager::InitialiseZombies()
+void UZombieManager::InitialiseZombies(AZombie* InZombie)
 {
-	TArray<AActor*> Zombies;
-	UGameplayStatics::GetAllActorsOfClass(this, AZombie::StaticClass(), Zombies);
-	for (auto& Zombie : Zombies)
+	if (InZombie)
 	{
-		AZombie* TrueZombie = Cast<AZombie>(Zombie);
-		TrueZombie->OnZombieDeath.AddDynamic(this, &UZombieManager::RemoveZombie);
-		float DistanceToPlayer = UKismetMathLibrary::Vector_Distance(TrueZombie->GetActorLocation(), Player->GetActorLocation());
-		AssessSpheres(DistanceToPlayer, TrueZombie);
+		float DistanceToPlayer = UKismetMathLibrary::Vector_Distance(InZombie->GetActorLocation(), Player->GetActorLocation());
+		AssessSpheres(DistanceToPlayer, InZombie);
+	}
+	else
+	{
+		TArray<AActor*> Zombies;
+		UGameplayStatics::GetAllActorsOfClass(this, AZombie::StaticClass(), Zombies);
+		if (Zombies.Num())
+		{
+			for (auto& Zombie : Zombies)
+			{
+				AZombie* TrueZombie = Cast<AZombie>(Zombie);
+				TrueZombie->OnZombieDeath.AddDynamic(this, &UZombieManager::RemoveZombie);
+				float DistanceToPlayer = UKismetMathLibrary::Vector_Distance(TrueZombie->GetActorLocation(), Player->GetActorLocation());
+				AssessSpheres(DistanceToPlayer, TrueZombie);
+			}
+		}
+		InitialiseZombies(Cast<AZombieSpawner>(UGameplayStatics::GetActorOfClass(Zombies[0], AZombieSpawner::StaticClass()))->SpawnZombie());
 	}
 }
 // Checks the zombie's gunshot distance

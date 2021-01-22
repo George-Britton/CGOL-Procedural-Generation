@@ -45,7 +45,7 @@ public:
 	UFUNCTION()
 		void OnSphereEndOverlap(AZombie* Zombie, UPrimitiveComponent* Sphere);
 	// Used to check all the zombies at the beginning to see what they should be involved in
-	void InitialiseZombies();
+	void InitialiseZombies(AZombie* InZombie);
 	// Checks the spheres to see which ones the zombies should be in
 	void AssessSpheres(float Distance, AZombie* Zombie);
 

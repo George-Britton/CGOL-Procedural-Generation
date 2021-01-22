@@ -69,16 +69,12 @@ void UGun::Fire()
 	if (GetWorld()->LineTraceSingleByChannel(HitEnemy, RayStart, RayEnd, ECC_Visibility, CollisionParameters))
 	{
 		AZombie* ZombieTest = Cast<AZombie>(HitEnemy.GetActor());
-		if (ZombieTest)
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "HIT: " + HitEnemy.GetActor()->GetName());
-			ZombieTest->RecieveAttack(Damage);
-		}
+		if (ZombieTest) ZombieTest->RecieveAttack(Damage);
 	}
 	
 	// This makes the gun seem like it's firing, with the sound, particles, and announcing to the zombies that it's been fired
 	GunshotSoundComponent->Play();
 	GunshotParticleSystem->Activate(true);
-	//OnGunshot.Broadcast();
+	OnGunshot.Broadcast();
 	TimeSinceLastFire = FireRate;
 }
