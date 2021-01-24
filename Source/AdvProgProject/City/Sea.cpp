@@ -1,7 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "Sea.h"
+
+#include "AdvProgProject/Player/PlayerCharacter.h"
 
 // Sets default values
 ASea::ASea()
@@ -32,6 +34,7 @@ void ASea::ReceiveCreateSea(UStaticMesh* InSeaMesh, UStaticMesh* InBeachMesh, fl
 	
 	// And then we generate the sea
 	CreateSea();
+	Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()))->AcknowledgeSpawn();
 }
 
 // Creates the sea using user-defined parameters

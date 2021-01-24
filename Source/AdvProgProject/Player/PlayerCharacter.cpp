@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "PlayerCharacter.h"
@@ -14,6 +14,7 @@ const static float MAX_CAMERA_PITCH_LIMIT = 90.f;
 const static FVector DEFAULT_REQUIRED_GUN_LOCATION = FVector(12.f, 10.f, -12.f);
 const static FQuat DEFAULT_REQUIRED_GUN_ROTATION = FRotator(0.f, -90.f, 0.f).Quaternion();
 const static float DEFAULT_REQUIRED_GUN_SCALE = 0.2f;
+const static int32 REQUIRED_SPAWN_CONFIRMATIONS_BEFORE_PLAY = 3;
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -56,10 +57,12 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 	FireRate = FMath::Clamp(FireRate, 0.01f, FireRate);
 
 	// Valid range for the spheres means that the size order between them stays the same
-	EnemyActivationSphereRadius = FMath::Clamp(EnemyActivationSphereRadius, EnemyGunshotSphereRadius, EnemyActivationSphereRadius);
+	EnemySpawnSphereRadius = FMath::Clamp(EnemySpawnSphereRadius, EnemyActivationSphereRadius, EnemySpawnSphereRadius);
+	EnemyActivationSphereRadius = FMath::Clamp(EnemyActivationSphereRadius, EnemyGunshotSphereRadius, EnemySpawnSphereRadius);
 	EnemyGunshotSphereRadius = FMath::Clamp(EnemyGunshotSphereRadius, EnemySightSphereRadius, EnemyActivationSphereRadius);
 	EnemySightSphereRadius = FMath::Clamp(EnemySightSphereRadius, EnemyAttackSphereRadius, EnemyGunshotSphereRadius);
 	EnemyAttackSphereRadius = FMath::Clamp(EnemyAttackSphereRadius, 1.f, EnemySightSphereRadius);
+	EnemySpawnSphere->SetSphereRadius(EnemySpawnSphereRadius, true);
 	EnemyActivationSphere->SetSphereRadius(EnemyActivationSphereRadius, true);
 	EnemyGunshotSphere->SetSphereRadius(EnemyGunshotSphereRadius, true);
 	EnemySightSphere->SetSphereRadius(EnemySightSphereRadius, true);
@@ -70,9 +73,6 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// Here we makes sure the player is alerted when the city is ready, so it can initialise the player with the zombies and gamemode
-	Cast<ACityGenerator>(UGameplayStatics::GetActorOfClass(this, ACityGenerator::StaticClass()))->OnCityReady.AddDynamic(this, &APlayerCharacter::InitialisePlayer);
 
 	// If the gun is destroyed due to no mesh, we call this
 	if (!Gun)
@@ -86,6 +86,12 @@ void APlayerCharacter::BeginPlay()
 	}
 }
 
+// Called when a system is fully spawner and is telling the player
+void APlayerCharacter::AcknowledgeSpawn()
+{
+	++ReadySystems;
+	if (ReadySystems == REQUIRED_SPAWN_CONFIRMATIONS_BEFORE_PLAY) InitialisePlayer();
+}
 // Called to intialised the player with the managing systems
 void APlayerCharacter::InitialisePlayer()
 {
@@ -143,16 +149,20 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::CreateEnemySpheres()
 {
 	// Here we create the enemy spheres and parent them to the root of the player for locked movement
+	EnemySpawnSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Spawn Sphere"));
 	EnemyActivationSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Activation Sphere"));
 	EnemyGunshotSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Gunshot Sphere"));
 	EnemySightSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Sight Sphere"));
 	EnemyAttackSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Attack Sphere"));
+	EnemySpawnSphere->SetupAttachment(this->RootComponent);
 	EnemyActivationSphere->SetupAttachment(this->RootComponent);
 	EnemyGunshotSphere->SetupAttachment(this->RootComponent);
 	EnemySightSphere->SetupAttachment(this->RootComponent);
 	EnemyAttackSphere->SetupAttachment(this->RootComponent);
 
 	// This binds their overlap and end overlap to event dispatcher functions
+	EnemySpawnSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
+	EnemySpawnSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
 	EnemyActivationSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
 	EnemyActivationSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
 	EnemyGunshotSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
@@ -164,16 +174,10 @@ void APlayerCharacter::CreateEnemySpheres()
 }
 // These three are used to announce when an enemy overlaps with a sphere
 void APlayerCharacter::OnSphereOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	AZombie* TestZombie = Cast<AZombie>(OtherActor);
-	if (TestZombie) OnPlayerSphereOverlap.Broadcast(TestZombie, HitComp);
-}
+{ if (OtherActor->GetName().Contains("Zombie")) OnPlayerSphereOverlap.Broadcast(OtherActor, HitComp); }
 // These three are used to announce when an enemy ends overlap with a sphere
 void APlayerCharacter::OnSphereEndOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	AZombie* TestZombie = Cast<AZombie>(OtherActor);
-	if (TestZombie) OnPlayerSphereEndOverlap.Broadcast(TestZombie, HitComp);
-}
+{ if (OtherActor->GetName().Contains("Zombie")) OnPlayerSphereEndOverlap.Broadcast(OtherActor, HitComp); }
 // Creates the camera and returns a reference for the gun
 UCameraComponent* APlayerCharacter::CreateCamera()
 {

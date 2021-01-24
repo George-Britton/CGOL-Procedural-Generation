@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 #pragma once
 
@@ -24,5 +24,7 @@ public:
 	// Controlled zombie manager
 	UPROPERTY()
 		UZombieManager* ZombieManager = nullptr;
+	UPROPERTY()
+		int32 ZombiePopulation = 30;
 
 };

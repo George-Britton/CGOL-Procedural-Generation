@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "AdvProgProject/Config/ZombieAnimInstance.h"
+#include "Zombie.h"
 #include "ZombieSpawner.generated.h"
 
 UCLASS()
@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Zombie")
 		USkeletalMesh* ZombieMesh = nullptr;
 
-	// Function to spawn a zombie and return the reference
-	AZombie* SpawnZombie();
+	// Function to spawn a zombie
+	void SpawnZombie();
+
+	// Initialises the variables of the newly spawned zombie
+	void InitZombie(AZombie* Zombie);
 };

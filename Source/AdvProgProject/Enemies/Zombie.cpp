@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "Zombie.h"
@@ -24,6 +24,9 @@ AZombie::AZombie()
 void AZombie::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// We don't want zombies to be visible when first seen
+	ToggleRender(false);
 
 	// First we grab the reference to the zombie's controller
 	ZombieController = Cast<AZombieController>(GetController());

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "ZombieController.h"

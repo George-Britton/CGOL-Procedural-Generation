@@ -1,8 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "City.h"
+#include "AdvProgProject/Player/PlayerCharacter.h"
+#include "AdvProgProject/Enemies/ZombieSpawner.h"
 #include "Helicopter.h"
+
+const static float ZOMBIE_SPAWNER_HEIGHT = 200.f;
 
 // Sets default values
 ACity::ACity()
@@ -19,7 +23,7 @@ ACity::ACity()
 }
 
 // Called to set the city parameters to the user-defined ones
-void ACity::ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale)
+void ACity::ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale, int32 InSpawnerFrequency, USoundBase* InRoarSound, UAnimBlueprint* InAnimBlueprint, USkeletalMesh* InZombieMesh)
 {
 	// We set the generation parameters to the user-defined
 	CityEvolutionGenerations = InCityEvolutions;
@@ -35,6 +39,10 @@ void ACity::ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> 
 	RoadMaterial = InRoadMaterial;
 	HelicopterMesh = InHeliMesh;
 	HelicopterScale = InHeliScale;
+	SpawnerFrequency = InSpawnerFrequency;
+	ZombieRoarSound = InRoarSound;
+	ZombieAnimationBlueprint = InAnimBlueprint;
+	ZombieMesh = InZombieMesh;
 
 	// We then sanitize the input and filter it through to the required components
 	SanitizeInput();
@@ -84,8 +92,11 @@ void ACity::BeginCreateCity()
 	} while (!IsPathWalkable()); // We check our start and end position are connected
 
 	// We then populate the city
-	BuildCity();
-	PlaceRoad();
+	if (BuildCity())
+	{
+		PlaceRoad();
+		Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()))->AcknowledgeSpawn();
+	}
 }
 
 // GENERATION
@@ -100,7 +111,7 @@ void ACity::CreatePropComponents()
 	{
 		PropComponentArray[PropLooper] = Cast<UInstancedStaticMeshComponent>(StaticConstructObject_Internal(UInstancedStaticMeshComponent::StaticClass(), this));
 		PropComponentArray[PropLooper]->RegisterComponent();
-		PropComponentArray[PropLooper]->AttachTo(this->RootComponent);
+		PropComponentArray[PropLooper]->AttachToComponent(this->RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		PropComponentArray[PropLooper]->SetStaticMesh(PropArray[PropLooper]);
 		PropComponentArray[PropLooper]->SetWorldLocation(this->GetActorLocation());
 	}
@@ -294,6 +305,7 @@ bool ACity::BuildCity()
 		else if (GridSquare != EndingPosition && GridSquare != StartingPosition)
 		{
 			if (FMath::RandRange(0.f, 99.9f) < PropSpawnProbability && PropArray.Num()) PlaceProp(GridTransform, BuildingWidth);
+			if (FMath::RandRange(0, 99) < SpawnerFrequency) PlaceSpawner(GridTransform);
 		}
 	}
 
@@ -326,6 +338,19 @@ void ACity::PlaceRoad()
 	float RelativeScale = CityBuilding->GetBoundingBox().GetSize().X / RoadMesh->GetBoundingBox().GetSize().X;
 	RoadComponent->SetRelativeScale3D(FVector(RelativeScale * Rows, RelativeScale * Columns, 1));
 	RoadComponent->AddLocalOffset(RoadComponent->GetRelativeScale3D() * (Rows / 2), false);
+}
+void ACity::PlaceSpawner(FTransform PlacementTransform)
+{
+	// Set the spawn parameters
+	FVector SpawnerSpawnLoc = PlacementTransform.GetLocation();
+	SpawnerSpawnLoc.Z += ZOMBIE_SPAWNER_HEIGHT;
+	FActorSpawnParameters SpawnParams;
+
+	// Spawn the spawner and set the variables
+	AZombieSpawner* Spawner = GetWorld()->SpawnActor<AZombieSpawner>(SpawnerSpawnLoc, FRotator::ZeroRotator, SpawnParams);
+	Spawner->AnimationBlueprint = ZombieAnimationBlueprint;
+	Spawner->RoarSound = ZombieRoarSound;
+	Spawner->ZombieMesh = ZombieMesh;
 }
 
 // Sets up the helicopter ending space

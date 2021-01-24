@@ -1,11 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 #pragma once
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Gun.h"
-#include "AdvProgProject/Enemies/Zombie.h"
 #include "PlayerCharacter.generated.h"
 
 // We create a new delegate type the debug message function
@@ -13,9 +12,9 @@ DECLARE_DELEGATE_OneParam(FDebugDelegate, FString);
 // We create delegate for the toggling of boolean states
 DECLARE_DELEGATE_OneParam(FToggleState, bool);
 // We create a delegate for the announcement of sphere overlap
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereOverlap, class AZombie*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereOverlap, class AActor*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
 // We also create a delegate for the announcement of sphere end overlaps
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereEndOverlap, class AZombie*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereEndOverlap, class AActor*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
 // We finally make a delegate for if the player dies
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDeath);
 
@@ -78,13 +77,17 @@ public:
 
 	// Variables for the enemy activation spheres
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		float EnemyActivationSphereRadius = 10000.f;
+		float EnemySpawnSphereRadius = 10000.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		float EnemyGunshotSphereRadius = 5000.f;
+		float EnemyActivationSphereRadius = 5000.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		float EnemySightSphereRadius = 2500.f;
+		float EnemyGunshotSphereRadius = 2500.f;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		float EnemySightSphereRadius = 1250.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 		float EnemyAttackSphereRadius = 75;
+	UPROPERTY()
+		USphereComponent* EnemySpawnSphere = nullptr;
 	UPROPERTY()
 		USphereComponent* EnemyActivationSphere = nullptr;
 	UPROPERTY()
@@ -97,6 +100,10 @@ public:
 		FOnPlayerSphereOverlap OnPlayerSphereOverlap;
 	UPROPERTY(BlueprintAssignable, Category = "Enemies")
 		FOnPlayerSphereEndOverlap OnPlayerSphereEndOverlap;
+
+	// This variable keeps track of how ready the game world is for play
+	UPROPERTY()
+		int32 ReadySystems = 0;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -106,6 +113,9 @@ protected:
 	void OnConstruction(const FTransform& Transform) override;
 	
 public:
+	// Called when a system is fully spawner and is telling the player
+	UFUNCTION()
+		void AcknowledgeSpawn();
 	// Called to intialised the player with the managing systems
 	void InitialisePlayer();
 	

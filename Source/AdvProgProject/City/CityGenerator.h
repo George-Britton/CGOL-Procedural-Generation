@@ -1,14 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 #pragma once
 
 #include "GameFramework/Actor.h"
 #include "Engine.h"
 #include "CityGenerator.generated.h"
-
-class ACityGenerator;
-// Event dispatcher for use after the city is generated and ready for the player
-DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE(FOnCityReady, ACityGenerator, OnCityReady);
 
 // Struct for the living rules of a cell, put into array for neighbour count
 USTRUCT(BlueprintType)
@@ -102,6 +98,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Sea")
 		int32 BeachWidth = 300;
 
+	// ENEMIES
+	// These variables control how many zombies spawn and their variables
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		int32 ZombiePopulation = 30;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		int32 SpawnerFrequency = 50;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		USoundBase* ZombieRoarSound = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		UAnimBlueprint* ZombieAnimationBlueprint = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		USkeletalMesh* ZombieMesh = nullptr;
+	
 	// ENDING
 	// These variables are used to populate the ending tile of the grid
 	UPROPERTY(EditAnywhere, Category = "City|Helicopter")
@@ -109,16 +118,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "City|Helicopter")
 		float HelicopterScale = 0.7f;
 
-	// EVENT DISPATCHERS
-	// The event dispatcher for letting the player know it's ready to go
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-		FOnCityReady OnCityReady;
-
 protected:
 	
 	// DEFAULT
 	// Called whenever a value is changed
-	void OnConstruction(const FTransform& Transform) override;
+	void OnConstruction(const FTransform& Transform);
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -129,4 +133,7 @@ protected:
 	void CreateSea();
 	// Sets up the forest outside the city
 	void CreateForest();
+
+	// Destroys itself after completion
+	void DeleteSelf() { this->Destroy(); }
 };

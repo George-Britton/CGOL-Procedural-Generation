@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 #pragma once
 
 #include "UObject/NoExportTypes.h"
 #include "Zombie.h"
+#include "ZombieSpawner.h"
 #include "ZombieManager.generated.h"
 
 // We must use multiple inheritence here to ensure that our base UObject is tickable
@@ -24,13 +25,15 @@ public:
 	UPROPERTY()
 		TArray<AZombie*> ZombiesWithinGunshotSphere;
 
-	// Used to tell if the manager is ready to start ray tracing to the player
+	// This array references the spawners that are within the player's spawn boundaries
 	UPROPERTY()
-		bool IsReady = false;
+		TArray<AZombieSpawner*> ZombieSpawnersInRange;
+
+	// This controls how many zombies are alive at any given time
 	UPROPERTY()
-		float RayTraceTimer = 0.f;
+		int32 ZombiePopulation = 30;
 	UPROPERTY()
-		float RayTraceFrequency = 2.f;
+		int32 ZombieSpawnStack = 0;
 	
 public:
 	// INITIALISATION
@@ -40,14 +43,14 @@ public:
 	// ACTIVATION SPHERES
 	// Used to add zombies to the appropriate arrays
 	UFUNCTION()
-		void OnSphereOverlap(AZombie* Zombie, UPrimitiveComponent* Sphere);
+		void OnSphereOverlap(AActor* InActor, UPrimitiveComponent* Sphere);
 	// Used to remove zombies from the appropriate arrays
 	UFUNCTION()
-		void OnSphereEndOverlap(AZombie* Zombie, UPrimitiveComponent* Sphere);
+		void OnSphereEndOverlap(AActor* InActor, UPrimitiveComponent* Sphere);
 	// Used to check all the zombies at the beginning to see what they should be involved in
-	void InitialiseZombies(AZombie* InZombie);
-	// Checks the spheres to see which ones the zombies should be in
-	void AssessSpheres(float Distance, AZombie* Zombie);
+	void InitialiseSpawners();
+	// Spawns a zombie
+	void SpawnZombie();
 
 	// BEHAVIOUR
 	// Used to tell zombies to chase gunfire

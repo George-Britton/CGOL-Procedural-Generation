@@ -1,7 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "Forest.h"
+
+#include "AdvProgProject/Player/PlayerCharacter.h"
 
 // Sets default values
 AForest::AForest()
@@ -44,6 +46,7 @@ void AForest::ReceiveCreateForest(TArray<UStaticMesh*> InTreeArray, uint32 InFor
 
 	// Then we populate the forest
 	PlantTrees(BuildingWidth);
+	Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()))->AcknowledgeSpawn();
 }
 
 // Called to populate the forest outside the city

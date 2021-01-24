@@ -1,13 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 
 #include "CityGenerator.h"
+
+#include "AdvProgProject/Config/APGameMode.h"
 #include "Forest.h"
 #include "Helicopter.h"
 #include "Sea.h"
 #include "City.h"
 #include "Kismet/GameplayStatics.h"
-#include "AdvProgProject/Player/PlayerCharacter.h"
 
 // DEFAULT
 // Sets default values
@@ -39,11 +40,11 @@ void ACityGenerator::BeginPlay()
 	Super::BeginPlay();
 
 	// We then generate the world, and declare it ready for the player
+	Cast<AAPGameMode>(UGameplayStatics::GetGameMode(this))->ZombiePopulation = ZombiePopulation;
 	CreateCity();
 	CreateSea();
 	CreateForest();
-	OnCityReady.Broadcast();
-	Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()))->InitialisePlayer();
+	DeleteSelf();
 }
 
 // CREATES EXTERNAL ACTORS
@@ -57,7 +58,7 @@ void ACityGenerator::CreateCity()
 	ACity* City = GetWorld()->SpawnActor<ACity>(ACity::StaticClass(), this->GetTransform(), SpawnParams);
 
 	// Then we pass in all the user-define parameters
-	City->ReceiveCityParameters(CityEvolutionGenerations, CellLifeRules, CellLifePercent, BorderWidth, CityBuilding, Rows, Columns, PropArray, PropSpawnProbability, RoadMesh, RoadMaterial, HelicopterMesh, HelicopterScale);
+	City->ReceiveCityParameters(CityEvolutionGenerations, CellLifeRules, CellLifePercent, BorderWidth, CityBuilding, Rows, Columns, PropArray, PropSpawnProbability, RoadMesh, RoadMaterial, HelicopterMesh, HelicopterScale, SpawnerFrequency, ZombieRoarSound, ZombieAnimationBlueprint, ZombieMesh);
 }
 // Constructs the sea by the side of the city
 void ACityGenerator::CreateSea()

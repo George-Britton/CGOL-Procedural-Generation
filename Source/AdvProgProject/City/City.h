@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// George Britton - Student# 100130736
 
 #pragma once
 
@@ -70,6 +70,17 @@ public:
 	UPROPERTY()
 		UStaticMeshComponent* RoadComponent = nullptr;
 
+	// ENEMIES
+	// This controls how many spawners are placed
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		int32 SpawnerFrequency = 50;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		USoundBase* ZombieRoarSound = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		UAnimBlueprint* ZombieAnimationBlueprint = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		USkeletalMesh* ZombieMesh = nullptr;
+	
 	// ENDING
 	// These variables are used to populate the ending tile of the grid
 	UPROPERTY(EditAnywhere, Category = "City|Helicopter")
@@ -113,12 +124,12 @@ private:
 	void PlaceBuilding(FTransform PlacementTransform, float BuildingWidth);
 	void PlaceProp(FTransform PlacementTransform, float BuildingWidth);
 	void PlaceRoad();
+	void PlaceSpawner(FTransform PlacementTransform);
 
 	// Sets up the helicopter ending space
 	void CreateHelicopter();
 
 public:
 	// Called to set the city parameters to the user-defined ones
-	void ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale);
-
+	void ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale, int32 InSpawnerFrequency, USoundBase* InRoarSound, UAnimBlueprint* InAnimBlueprint, USkeletalMesh* InZombieMesh);
 };
