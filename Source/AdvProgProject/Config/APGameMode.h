@@ -27,4 +27,9 @@ public:
 	UPROPERTY()
 		int32 ZombiePopulation = 30;
 
+	UFUNCTION()
+		void OnPlayerDeath() { UGameplayStatics::OpenLevel(Player, "DeathScreen"); }
+	UFUNCTION()
+		void OnPlayerReachesEnd() { UGameplayStatics::OpenLevel(Player, "WinScreen"); }
+
 };

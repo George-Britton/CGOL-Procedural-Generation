@@ -40,7 +40,7 @@ void AZombie::BeginPlay()
 	if (RoarSound) RoarSoundComponent->SetSound(RoarSound);
 	
 	// Here we fins an actor of class "player character", and cast it to the right class for the player
-	Player = Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()));
+	while (!Player) { Player = Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass())); }
 }
 
 // Called every frame

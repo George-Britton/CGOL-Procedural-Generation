@@ -3,6 +3,8 @@
 
 #include "Helicopter.h"
 
+#include "AdvProgProject/Config/APGameMode.h"
+
 
 // Sets default values
 AHelicopter::AHelicopter()
@@ -31,4 +33,6 @@ void AHelicopter::InitialiseMeshAndBounds(USkeletalMesh* Mesh)
 	HelicopterMeshComponent->SetSkeletalMesh(Mesh);
 	EndOverlapBox->SetBoxExtent(Mesh->GetBounds().BoxExtent * RelativeEndBoxSize);
 	this->SetActorRotation(FRotator(0, 45, 0));
+	AAPGameMode* AdvProgGameMode = Cast<AAPGameMode>(UGameplayStatics::GetGameMode(this));
+	OnPlayerReachEnd.AddDynamic(AdvProgGameMode, &AAPGameMode::OnPlayerReachesEnd);
 }

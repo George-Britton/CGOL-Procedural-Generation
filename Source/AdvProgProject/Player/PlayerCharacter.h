@@ -15,6 +15,8 @@ DECLARE_DELEGATE_OneParam(FToggleState, bool);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereOverlap, class AActor*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
 // We also create a delegate for the announcement of sphere end overlaps
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerSphereEndOverlap, class AActor*, OtherActor, class UPrimitiveComponent*, OverlappedSphere);
+// We make a delegate for when the player takes damage
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamage, float, NewHealth);
 // We finally make a delegate for if the player dies
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDeath);
 
@@ -30,6 +32,8 @@ public:
 	// Used to determine how much life the player has
 	UPROPERTY(EditAnywhere, Category = "Life")
 		float Health = 100.f;
+	UPROPERTY(BlueprintAssignable, Category = "Life")
+		FOnDamage OnDamage;
 	UPROPERTY(BlueprintAssignable, Category = "Life")
 		FOnPlayerDeath OnPlayerDeath;
 

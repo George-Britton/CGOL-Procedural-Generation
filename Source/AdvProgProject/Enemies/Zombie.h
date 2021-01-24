@@ -89,5 +89,5 @@ public:
 	void RecieveAttack(float InDamage);
 	// Used to tell the zombie to delete itself, used by the animation
 	UFUNCTION(BlueprintCallable, Category = "Life")
-		void KillZombie(){ OnZombieDeath.Broadcast(this); this->Destroy(); };
+		void KillZombie(){ this->Destroy(); };
 };

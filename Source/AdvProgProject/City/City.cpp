@@ -307,6 +307,7 @@ bool ACity::BuildCity()
 			if (FMath::RandRange(0.f, 99.9f) < PropSpawnProbability && PropArray.Num()) PlaceProp(GridTransform, BuildingWidth);
 			if (FMath::RandRange(0, 99) < SpawnerFrequency) PlaceSpawner(GridTransform);
 		}
+		else if (GridSquare == StartingPosition) Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass()))->SetActorLocation(FVector(GridTransform.GetLocation().X, GridTransform.GetLocation().Y, 20.f));
 	}
 
 	CreateHelicopter();
@@ -336,8 +337,8 @@ void ACity::PlaceProp(FTransform PlacementTransform, float BuildingWidth)
 void ACity::PlaceRoad()
 {
 	float RelativeScale = CityBuilding->GetBoundingBox().GetSize().X / RoadMesh->GetBoundingBox().GetSize().X;
-	RoadComponent->SetRelativeScale3D(FVector(RelativeScale * Rows, RelativeScale * Columns, 1));
-	RoadComponent->AddLocalOffset(RoadComponent->GetRelativeScale3D() * (Rows / 2), false);
+	RoadComponent->SetRelativeScale3D(FVector(RelativeScale * Rows, RelativeScale * Columns, 1.f));
+	RoadComponent->AddLocalOffset(FVector(RoadComponent->GetRelativeScale3D().X * (Rows / 2), RoadComponent->GetRelativeScale3D().Y * (Columns / 2), 1.f), false);
 }
 void ACity::PlaceSpawner(FTransform PlacementTransform)
 {

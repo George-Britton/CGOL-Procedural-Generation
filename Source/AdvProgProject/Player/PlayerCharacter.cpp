@@ -67,6 +67,8 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 	EnemyGunshotSphere->SetSphereRadius(EnemyGunshotSphereRadius, true);
 	EnemySightSphere->SetSphereRadius(EnemySightSphereRadius, true);
 	EnemyAttackSphere->SetSphereRadius(EnemyAttackSphereRadius, true);
+	EnemySpawnSphere->SetHiddenInGame(true);
+	EnemyActivationSphere->SetHiddenInGame(true);
 }
 
 // Called when the game starts or when spawned
@@ -103,6 +105,7 @@ void APlayerCharacter::InitialisePlayer()
 		{
 			AdvProgGameMode->Player = this;
 			AdvProgGameMode->ZombieManager->InitialiseActors(this);
+			OnPlayerDeath.AddDynamic(AdvProgGameMode, &AAPGameMode::OnPlayerDeath);
 		}
 		else PrintDebugMessage("Error: gamemode not found by PlayerCharacter");
 	}
@@ -274,6 +277,7 @@ void APlayerCharacter::ToggleJump(bool Jumping)
 void APlayerCharacter::RecieveAttack(float Damage)
 {
 	Health -= Damage;
+	OnDamage.Broadcast(Health);
 	if (Health <= 0.f) OnPlayerDeath.Broadcast();
 }
 // Used to tell the zombie they are overlapping with the player

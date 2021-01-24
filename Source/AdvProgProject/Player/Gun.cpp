@@ -18,6 +18,7 @@ UGun::UGun()
 	GunshotParticleSystem->bAutoActivate = false;
 	GunshotSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Gunshot Sound"));
 	GunshotSoundComponent->SetupAttachment(this);
+	GunshotSoundComponent->SetAutoActivate(false);
 
 	// We set the gun mesh to the component
 	this->SetStaticMesh(GunMesh);
