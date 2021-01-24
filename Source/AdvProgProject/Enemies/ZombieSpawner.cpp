@@ -18,10 +18,13 @@ AZombieSpawner::AZombieSpawner()
 AZombie* AZombieSpawner::SpawnZombie()
 {
 	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	AZombie* SpawnedZombie = GetWorld()->SpawnActor<AZombie>(this->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+	SpawnedZombie->RoarSound = RoarSound;
 	SpawnedZombie->RoarSoundComponent->SetSound(RoarSound);
 	SpawnedZombie->GetMesh()->SetSkeletalMesh(ZombieMesh);
-	SpawnedZombie->GetMesh()->SetAnimClass(AnimationBlueprint);
+	SpawnedZombie->GetMesh()->SetAnimInstanceClass(AnimationBlueprint->GetAnimBlueprintGeneratedClass());
+	Cast<UZombieAnimInstance>(SpawnedZombie->GetMesh()->GetAnimInstance())->InitParentZombie(SpawnedZombie);
 	SpawnedZombie->ToggleRender(true);
 	return SpawnedZombie;
 }

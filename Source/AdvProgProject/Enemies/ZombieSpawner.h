@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Zombie.h"
+#include "AdvProgProject/Config/ZombieAnimInstance.h"
 #include "ZombieSpawner.generated.h"
 
 UCLASS()
@@ -20,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Zombie")
 		USoundBase* RoarSound = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Zombie")
-		UClass* AnimationBlueprint = nullptr;
+		UAnimBlueprint* AnimationBlueprint = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Zombie")
 		USkeletalMesh* ZombieMesh = nullptr;
 

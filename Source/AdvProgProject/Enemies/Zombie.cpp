@@ -13,7 +13,6 @@ AZombie::AZombie()
 	PrimaryActorTick.bCanEverTick = true;
 	RoarSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Roar Component"));
 	RoarSoundComponent->SetupAttachment(this->RootComponent);
-	this->GetMesh()->SetRenderStatic(true);
 	AIControllerClass = AZombieController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
@@ -25,7 +24,7 @@ AZombie::AZombie()
 void AZombie::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// First we grab the reference to the zombie's controller
 	ZombieController = Cast<AZombieController>(GetController());
 	ZombieController->ParentZombie = this;
