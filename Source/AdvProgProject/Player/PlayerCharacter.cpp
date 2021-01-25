@@ -21,13 +21,15 @@ APlayerCharacter::APlayerCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	DamageSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Damage Sound Component"));
+	DamageSoundComponent->SetupAttachment(this->RootComponent);
+	DamageSoundComponent->SetAutoActivate(false);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	// We first make the player camera
 	UCameraComponent* CustomCamera = CreateCamera();
 	// And then the gun using the returned reference
 	CreateGun(CustomCamera);
-	
 	GunTransform.SetLocation(DEFAULT_REQUIRED_GUN_LOCATION);
 	GunTransform.SetRotation(DEFAULT_REQUIRED_GUN_ROTATION);
 	GunTransform.SetScale3D(FVector(DEFAULT_REQUIRED_GUN_SCALE));
@@ -44,8 +46,11 @@ APlayerCharacter::APlayerCharacter()
 // Called when a value changes
 void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
+	// This sets the player damage sound to be played on damage taken
+	if (DamageSound) DamageSoundComponent->SetSound(DamageSound);
+	
 	// Here we'll make sure the gun is in the right place for the player
-	Gun->CustomOnConstruction(GunMesh, GunTransform, GunDamage, FireRate, GunshotParticles, GunshotSound, EnemyActivationSphereRadius);
+	Gun->CustomOnConstruction(GunMesh, GunTransform, GunDamage, FireRate, GunshotParticles, GunshotSound, EnemyActivationSphereRadius, BloodParticles);
 	
 	// Here we'll make sure all our values stay in a valid range
 	CameraHeight = FMath::Clamp(CameraHeight, 1.f, MAX_CAMERA_HEIGHT);
@@ -277,6 +282,7 @@ void APlayerCharacter::ToggleJump(bool Jumping)
 void APlayerCharacter::RecieveAttack(float Damage)
 {
 	Health -= Damage;
+	DamageSoundComponent->Play();
 	OnDamage.Broadcast(Health);
 	if (Health <= 0.f)
 	{

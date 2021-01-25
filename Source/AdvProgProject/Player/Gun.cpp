@@ -11,11 +11,17 @@
 // Sets default values
 UGun::UGun()
 {
-	// Here we add the particle system for the gunshot particles and sound
+	// Here we add the particle systems for the gunshot particles and blood particles and sound.
+	// The reason we set the blood here to be played on the zombies is so we don't have to instantiate
+	// it on every zombie, we are object pooling the particles.
 	GunshotParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Gunshot Particles"));
 	GunshotParticleSystem->SetupAttachment(this);
 	GunshotParticleSystem->bAutoManageAttachment = true;
 	GunshotParticleSystem->bAutoActivate = false;
+	BloodParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Bloodshot Particles"));
+	BloodParticleSystem->SetupAttachment(this);
+	BloodParticleSystem->bAutoManageAttachment = true;
+	BloodParticleSystem->bAutoActivate = false;
 	GunshotSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Gunshot Sound"));
 	GunshotSoundComponent->SetupAttachment(this);
 	GunshotSoundComponent->SetAutoActivate(false);
@@ -27,18 +33,19 @@ UGun::UGun()
 }
 
 // Called when a value changes
-void UGun::CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange)
+void UGun::CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange, UParticleSystem* BloodParticles)
 {
 	SetRelativeTransform(GunTransform);
 	Damage = GunDamage;
 	GunshotRange = InGunshotRange;
 	FireRate = InFireRate;
-	GunshotParticleSystem->SetTemplate(GunshotParticles);
-	GunMesh = InGunMesh;
+	if (GunshotParticles) GunshotParticleSystem->SetTemplate(GunshotParticles);
+	if (BloodParticles) BloodParticleSystem->SetTemplate(BloodParticles);
+	if (InGunMesh) GunMesh = InGunMesh;
 	SetStaticMesh(GunMesh);
 	if (GunMesh) if (GunMesh->GetName().Contains("M5")) GunshotParticleSystem->AutoAttachSocketName = "Barrel";
-	GunshotSound = InGunshotSound;
-	GunshotSoundComponent->SetSound(GunshotSound);
+	if (InGunshotSound) GunshotSound = InGunshotSound;
+	if (GunshotSound) GunshotSoundComponent->SetSound(GunshotSound);
 }
 
 // Called every frame
@@ -60,17 +67,23 @@ void UGun::ToggleFire(bool Firing)
 // Executes a fire from the gun
 void UGun::Fire()
 {
+	// These are the parameters for the ray trace
 	FHitResult HitEnemy;
 	FVector RayStart = PlayerCamera->GetComponentLocation();
 	FVector RayEnd = RayStart + (PlayerCamera->GetForwardVector() * GunshotRange);
 	FCollisionQueryParams CollisionParameters;
 
-	DrawDebugLine(GetWorld(), RayStart, RayEnd, FColor::Red, false, 2, 0, 1);
-	
+	// Here we do a ray trace to see if a zombie is in the gun's firing line, if it is, we play the blood particles
+	// at that location, and tell the zombie it got shot
 	if (GetWorld()->LineTraceSingleByChannel(HitEnemy, RayStart, RayEnd, ECC_Visibility, CollisionParameters))
 	{
 		AZombie* ZombieTest = Cast<AZombie>(HitEnemy.GetActor());
-		if (ZombieTest) ZombieTest->RecieveAttack(Damage);
+		if (ZombieTest)
+		{
+			BloodParticleSystem->SetWorldLocation(HitEnemy.ImpactPoint, false, nullptr, ETeleportType::None);
+			BloodParticleSystem->Activate(true);
+			ZombieTest->RecieveAttack(Damage);
+		}
 	}
 	
 	// This makes the gun seem like it's firing, with the sound, particles, and announcing to the zombies that it's been fired

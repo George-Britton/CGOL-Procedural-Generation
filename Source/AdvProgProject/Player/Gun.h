@@ -41,8 +41,10 @@ public:
 		float GunshotRange = 10000.f;
 	UPROPERTY()
 		bool IsFiring = false;
-	UPROPERTY(VisibleAnywhere, Category = "Appearance")
+	UPROPERTY()
 		UParticleSystemComponent* GunshotParticleSystem = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "Appearance")
+		UParticleSystemComponent* BloodParticleSystem = nullptr;
 	UPROPERTY()
 		UAudioComponent* GunshotSoundComponent = nullptr;
 	UPROPERTY()
@@ -51,7 +53,7 @@ public:
 		FOnGunshot OnGunshot;
 	
 	// Called when a value changes
-	void CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange);
+	void CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange, UParticleSystem* BloodParticles);
 
 	// Called every frame
 	void CustomTick(float DeltaTime);

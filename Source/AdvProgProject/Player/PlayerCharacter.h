@@ -32,6 +32,10 @@ public:
 	// Used to determine how much life the player has
 	UPROPERTY(EditAnywhere, Category = "Life")
 		float Health = 100.f;
+	UPROPERTY(EditAnywhere, Category = "Life")
+		USoundBase* DamageSound = nullptr;
+	UPROPERTY()
+		UAudioComponent* DamageSoundComponent = nullptr;
 	UPROPERTY(BlueprintAssignable, Category = "Life")
 		FOnDamage OnDamage;
 	UPROPERTY(BlueprintAssignable, Category = "Life")
@@ -76,6 +80,8 @@ public:
 		UParticleSystem* GunshotParticles = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 		USoundBase* GunshotSound = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+		UParticleSystem* BloodParticles = nullptr;
 
 	// Variables for the enemy activation spheres
 	UPROPERTY(EditAnywhere, Category = "Enemies")
