@@ -54,13 +54,13 @@ public:
 	UPROPERTY()
 		AZombieController* ZombieController = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
-		EZombieState ZombieState = EZombieState::INACTIVE;
+		EZombieState ZombieState = EZombieState::IDLE;
 	UPROPERTY(BlueprintAssignable, Category = "States")
 		FOnZombieStateChange OnZombieStateChange;
 
 	// used to space out the zombie attack timings
 	UPROPERTY()
-		float ZombieAttackSpeed = 1.f;
+		float ZombieAttackSpeed = 2.133333f;
 	UPROPERTY()
 		float ZombieAttackCountdown = 0.f;
 	UPROPERTY(EditAnywhere, Category = "Attack")
@@ -89,5 +89,5 @@ public:
 	void RecieveAttack(float InDamage);
 	// Used to tell the zombie to delete itself, used by the animation
 	UFUNCTION(BlueprintCallable, Category = "Life")
-		void KillZombie(){ this->Destroy(); };
+		void KillZombie(){ OnZombieDeath.Broadcast(this); this->Destroy(); }
 };

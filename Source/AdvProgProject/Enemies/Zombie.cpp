@@ -11,13 +11,19 @@ AZombie::AZombie()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Here we create the roar sound component and attach it to the root
 	RoarSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Roar Component"));
 	RoarSoundComponent->SetupAttachment(this->RootComponent);
+
+	// Next we make sure the zombie has the right controller
 	AIControllerClass = AZombieController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-	GetMesh()->AddLocalOffset(FVector(0.f, 0.f, MESH_ANIMATION_OFFSET));
-	GetMesh()->AddLocalRotation(FRotator(0.f, -90.f, 0.f));
+
+	// And then we set the mesh customisations
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block); // For the ray trace from the gun
+	GetMesh()->AddLocalOffset(FVector(0.f, 0.f, MESH_ANIMATION_OFFSET)); // To correct a mis-matched mesh
+	GetMesh()->AddLocalRotation(FRotator(0.f, -90.f, 0.f)); // To correct a mis-matched mesh
 }
 
 // Called when the game starts or when spawned
@@ -80,10 +86,10 @@ void AZombie::ToggleRender(bool Rendering)
 // Used to set the zombie to chase down the player
 void AZombie::ToggleMoveToPlayer(bool Chasing, bool Idle, bool Roar)
 {
-	if (Chasing) { ZombieController->ToggleMoveToPlayer(Player, true, Idle, Roar); }
+	if (Chasing && ZombieState != EZombieState::DYING) { ZombieController->ToggleMoveToPlayer(Player, true, Idle, Roar); }
 	else ZombieController->ToggleMoveToPlayer(Player, false, Idle, false);
 }
-void AZombie::Roar() { RoarSoundComponent->Play(); }
+void AZombie::Roar(){ RoarSoundComponent->Play(); }
 // Used to make the zombie attack the player
 void AZombie::ToggleAttackPlayer(bool Attacking)
 {
@@ -102,12 +108,14 @@ void AZombie::Attack()
 // Used to tell the zombie they've been shot
 void AZombie::RecieveAttack(float InDamage)
 {
-	Health -= InDamage;
-	if (Health <= 0.f)
+	if (Health > 0.f)
 	{
-		ZombieController->StopMovement();
-		ZombieState = EZombieState::DYING;
-		OnZombieStateChange.Broadcast(EZombieState::DYING);
-		OnZombieDeath.Broadcast(this);
+		Health -= InDamage;
+		if (Health <= 0.f)
+		{
+			ZombieController->StopMovement();
+			ZombieState = EZombieState::DYING;
+			OnZombieStateChange.Broadcast(EZombieState::DYING);
+		}
 	}
 }

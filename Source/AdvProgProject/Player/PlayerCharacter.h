@@ -64,8 +64,6 @@ public:
 	// Variables for the player's weapon
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 		float GunDamage = 20.f;
-	UPROPERTY(EditAnywhere, Category = "Weapon")
-		float GunshotRange = 10000.f;
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 		UGun* Gun = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Weapon")

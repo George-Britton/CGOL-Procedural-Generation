@@ -45,7 +45,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
 	// Here we'll make sure the gun is in the right place for the player
-	Gun->CustomOnConstruction(GunMesh, GunTransform, GunDamage, FireRate, GunshotParticles, GunshotSound, GunshotRange);
+	Gun->CustomOnConstruction(GunMesh, GunTransform, GunDamage, FireRate, GunshotParticles, GunshotSound, EnemyActivationSphereRadius);
 	
 	// Here we'll make sure all our values stay in a valid range
 	CameraHeight = FMath::Clamp(CameraHeight, 1.f, MAX_CAMERA_HEIGHT);
@@ -278,7 +278,12 @@ void APlayerCharacter::RecieveAttack(float Damage)
 {
 	Health -= Damage;
 	OnDamage.Broadcast(Health);
-	if (Health <= 0.f) OnPlayerDeath.Broadcast();
+	if (Health <= 0.f)
+	{
+		OnPlayerSphereOverlap.Clear();
+		OnPlayerSphereEndOverlap.Clear();
+		OnPlayerDeath.Broadcast();
+	}
 }
 // Used to tell the zombie they are overlapping with the player
 void APlayerCharacter::OnZombieOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
