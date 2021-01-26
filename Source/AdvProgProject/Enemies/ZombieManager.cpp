@@ -47,7 +47,9 @@ void UZombieManager::OnSphereOverlap(AActor* InActor, UPrimitiveComponent* Spher
 		if (Sphere->GetName().Contains("Spawn")) 
 		{
 			ZombieSpawnersInRange.AddUnique(Spawner);
-			if (CurrentZombies < ZombiePopulation) SpawnZombie();
+			TArray<AActor*> ZombieCountTest;
+			UGameplayStatics::GetAllActorsOfClass(Player, AZombie::StaticClass(), ZombieCountTest);
+			if (ZombieCountTest.Num() < ZombiePopulation) SpawnZombie();
 		}
 		else if (Sphere->GetName().Contains("Activation")) { ZombieSpawnersInRange.Remove(Spawner); }
 	}
@@ -96,13 +98,14 @@ void UZombieManager::InitialiseSpawners()
 // Spawns a zombie
 void UZombieManager::SpawnZombie()
 {
+	TArray<AActor*> ZombieCountTest;
+	UGameplayStatics::GetAllActorsOfClass(Player, AZombie::StaticClass(), ZombieCountTest);
 	// While there are any spawners within range and any zombies on the stack...
-	while (ZombieSpawnersInRange.Num() > 0 && CurrentZombies < ZombiePopulation)
+	while (ZombieSpawnersInRange.Num() > 0 && ZombieCountTest.Num() < ZombiePopulation)
 	{
 		// We choose a spawner in range and spawn a zombie from it. We then reduce the stack by one.
 		// We do it in this iterative way so if the spawners all leave the range, the rest of the stack remains until another spawns
 		ZombieSpawnersInRange[FMath::RandRange(0, ZombieSpawnersInRange.Num() - 1)]->SpawnZombie();
-		++CurrentZombies;
 	}
 }
 
@@ -117,6 +120,5 @@ void UZombieManager::RemoveZombie(AZombie* Zombie)
 {
 	ZombiesWithinGunshotSphere.Remove(Zombie);
 	Zombie->OnZombieDeath.Remove(this, "RemoveZombie");
-	--CurrentZombies;
 	SpawnZombie();
 }

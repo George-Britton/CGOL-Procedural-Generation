@@ -33,8 +33,6 @@ public:
 	UPROPERTY()
 		int32 ZombiePopulation = 30;
 	UPROPERTY()
-		int32 CurrentZombies = 0;
-	UPROPERTY()
 		bool InitialSpawnFinished = false;
 	
 public:

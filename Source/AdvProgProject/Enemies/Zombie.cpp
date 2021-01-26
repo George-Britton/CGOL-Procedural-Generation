@@ -93,7 +93,7 @@ void AZombie::Roar(){ RoarSoundComponent->Play(); }
 // Used to make the zombie attack the player
 void AZombie::ToggleAttackPlayer(bool Attacking)
 {
-	if (Attacking) { ZombieController->ToggleAttackPlayer(Player, true); }
+	if (Attacking && ZombieState != EZombieState::DYING) { ZombieController->ToggleAttackPlayer(Player, true); }
 	else
 	{
 		ZombieController->ToggleAttackPlayer(Player, false);

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "AdvProgProject/City/Helicopter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Gun.h"
@@ -109,6 +110,17 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemies")
 		FOnPlayerSphereEndOverlap OnPlayerSphereEndOverlap;
 
+	// Variables for the direction arrow that points towards the helicopter
+	UPROPERTY(EditAnywhere, Category = "Camera")
+		UStaticMesh* DirectionArrowMesh = nullptr;
+	UPROPERTY()
+		UStaticMeshComponent* DirectionArrow = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+		FVector RelativeArrowLocation;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+		FVector RelativeArrowScale;
+	FVector HelicopterLocation;
+	
 	// This variable keeps track of how ready the game world is for play
 	UPROPERTY()
 		int32 ReadySystems = 0;
@@ -166,10 +178,12 @@ public:
 	// ATTACKS
 	// Used to tell the player they have been attacked by a zombie
 	void RecieveAttack(float Damage);
-	// Used to tell the zombie they are overlapping with the player
-	void OnZombieOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	void OnZombieEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	// UTILITY
+	// These functions tell the direction arrow to point towards the helicopter
+	void TurnArrow();
+	float GetDirection();
+	
 	// DEBUG
 	// This function is used to print errors that occur during runtime
 	UFUNCTION()

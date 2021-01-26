@@ -6,7 +6,7 @@
 #include "AdvProgProject/Enemies/Zombie.h"
 #include "Components/AudioComponent.h"
 #include "PlayerCharacter.h"
-#include "DrawDebugHelpers.h"
+#include "PlayerCharacter.h"
 
 // Sets default values
 UGun::UGun()
@@ -72,6 +72,7 @@ void UGun::Fire()
 	FVector RayStart = PlayerCamera->GetComponentLocation();
 	FVector RayEnd = RayStart + (PlayerCamera->GetForwardVector() * GunshotRange);
 	FCollisionQueryParams CollisionParameters;
+	CollisionParameters.AddIgnoredActor(Player);
 
 	// Here we do a ray trace to see if a zombie is in the gun's firing line, if it is, we play the blood particles
 	// at that location, and tell the zombie it got shot

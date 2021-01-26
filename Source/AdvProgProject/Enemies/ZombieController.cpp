@@ -10,7 +10,7 @@ const static float GLOBAL_ROAR_TIME = 2.f;
 // Used to start the zombie moving towards the player
 bool AZombieController::ToggleMoveToPlayer(APlayerCharacter* Player, bool Chasing, bool Idle, bool Roar)
 {
-	if (Chasing)
+	if (Chasing && ParentZombie->ZombieState != EZombieState::DYING)
 	{
 		ParentZombie->ToggleRender(true);
 		ParentZombie->ZombieState = EZombieState::CHASING;

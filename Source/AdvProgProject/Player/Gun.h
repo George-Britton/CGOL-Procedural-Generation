@@ -26,7 +26,7 @@ public:
 
 	// variables about the player
 	UPROPERTY()
-		class APlayerController* PlayerController = nullptr;
+		class APlayerCharacter* Player = nullptr;
 	UPROPERTY()
 		UCameraComponent* PlayerCamera = nullptr;
 
@@ -54,7 +54,7 @@ public:
 	
 	// Called when a value changes
 	void CustomOnConstruction(UStaticMesh* InGunMesh, FTransform GunTransform, float GunDamage, float InFireRate, UParticleSystem* GunshotParticles, USoundBase* InGunshotSound, float InGunshotRange, UParticleSystem* BloodParticles);
-
+	
 	// Called every frame
 	void CustomTick(float DeltaTime);
 

@@ -7,6 +7,7 @@
 #include "AdvProgProject/Config/APGameMode.h"
 #include "AdvProgProject/Enemies/ZombieManager.h"
 #include "AdvProgProject/City/CityGenerator.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // global constants
 const static float MAX_CAMERA_HEIGHT = 100.f;
@@ -24,8 +25,8 @@ APlayerCharacter::APlayerCharacter()
 	DamageSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Damage Sound Component"));
 	DamageSoundComponent->SetupAttachment(this->RootComponent);
 	DamageSoundComponent->SetAutoActivate(false);
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+	
 	// We first make the player camera
 	UCameraComponent* CustomCamera = CreateCamera();
 	// And then the gun using the returned reference
@@ -33,6 +34,11 @@ APlayerCharacter::APlayerCharacter()
 	GunTransform.SetLocation(DEFAULT_REQUIRED_GUN_LOCATION);
 	GunTransform.SetRotation(DEFAULT_REQUIRED_GUN_ROTATION);
 	GunTransform.SetScale3D(FVector(DEFAULT_REQUIRED_GUN_SCALE));
+
+	// We then create the arrow component, which must be made after the camera so it can parent to it
+	DirectionArrow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Direction Arrow"));
+	DirectionArrow->SetupAttachment(PlayerCamera);
+	DirectionArrow->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECR_Ignore);
 	
 	// We also need to create the sphere components that overlap the enemies
 	CreateEnemySpheres();
@@ -48,7 +54,12 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 {
 	// This sets the player damage sound to be played on damage taken
 	if (DamageSound) DamageSoundComponent->SetSound(DamageSound);
-	
+
+	// This moves the arrow to the ideal location for the player
+	DirectionArrow->SetRelativeLocation(RelativeArrowLocation);
+	DirectionArrow->SetWorldScale3D(RelativeArrowScale);
+	DirectionArrow->SetStaticMesh(DirectionArrowMesh);
+
 	// Here we'll make sure the gun is in the right place for the player
 	Gun->CustomOnConstruction(GunMesh, GunTransform, GunDamage, FireRate, GunshotParticles, GunshotSound, EnemyActivationSphereRadius, BloodParticles);
 	
@@ -114,6 +125,9 @@ void APlayerCharacter::InitialisePlayer()
 		}
 		else PrintDebugMessage("Error: gamemode not found by PlayerCharacter");
 	}
+
+	// We also set the helicopter location for use by the arrow
+	HelicopterLocation = Cast<AHelicopter>(UGameplayStatics::GetActorOfClass(this, AHelicopter::StaticClass()))->GetActorLocation();
 }
 
 // Called every frame
@@ -130,6 +144,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 		ToggleCrouch(false);
 		LaunchCharacter(FVector(0, 0, JumpHeight), false, true);
 	}
+
+	// We then turn the arrow to point towards the goal
+	TurnArrow();
 }
 
 // Called to bind functionality to input
@@ -198,11 +215,11 @@ UCameraComponent* APlayerCharacter::CreateCamera()
 // Creates the gun using the CreateCamera() reference for the aiming
 void APlayerCharacter::CreateGun(UCameraComponent* InCamera)
 {
-	// We also set the gun here to parent to the camera, so it turns with the layer
+	// We also set the gun here to parent to the camera, so it turns with the player
 	Gun = CreateDefaultSubobject<UGun>(TEXT("Gun"));
 	Gun->SetupAttachment(InCamera);
 	Gun->PlayerCamera = InCamera;
-	Gun->PlayerController = Cast<APlayerController>(GetController());
+	Gun->Player = this;
 }
 
 // INPUTS
@@ -288,14 +305,47 @@ void APlayerCharacter::RecieveAttack(float Damage)
 	{
 		OnPlayerSphereOverlap.Clear();
 		OnPlayerSphereEndOverlap.Clear();
+		OnDamage.Clear();
 		OnPlayerDeath.Broadcast();
 	}
 }
-// Used to tell the zombie they are overlapping with the player
-void APlayerCharacter::OnZombieOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{ if (OtherActor->GetName().Contains("Zombie")) Cast<AZombie>(OtherActor)->ToggleAttackPlayer(true); }
-void APlayerCharacter::OnZombieEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{ if (OtherActor->GetName().Contains("Zombie")) Cast<AZombie>(OtherActor)->ToggleAttackPlayer(false); }
+
+// UTILITY
+// These functions tell the direction arrow to point towards the helicopter
+void APlayerCharacter::TurnArrow()
+{
+	// First we get the scalar direction of the helicopter relative to the player's forward vector
+	float Direction = GetDirection();
+	
+	// We then set the arrow to that rotation
+	DirectionArrow->SetRelativeRotation(FRotator(0.f, Direction, 0.f));
+}
+float APlayerCharacter::GetDirection()
+{
+	// First we use the forward point of the player as the reference point
+	FVector ForwardPoint = GetActorForwardVector();
+	// and then we check the location of the helicopter relative to the player
+	FVector RelativeHelicopterLocation = HelicopterLocation - this->GetActorLocation();
+	
+	// We remove the Z of each as the elevation will pretty much always be the same
+	// and we normalise the vectors so we can dot product them as scalars
+	RelativeHelicopterLocation.Z = 0.f;
+	RelativeHelicopterLocation.Normalize();
+	ForwardPoint.Z = 0.f;
+	ForwardPoint.Normalize();
+	
+	// We get the dot product as a relative scalar of the direction
+	float DotProduct = FVector::DotProduct(RelativeHelicopterLocation, ForwardPoint);
+
+	// Convert from radians to degrees
+	float Azimuth = FMath::Acos(DotProduct) / (PI / 180);
+
+	// And make the degrees count from 0°-360°
+	if (FVector::DotProduct(RelativeHelicopterLocation, this->GetActorRightVector()) < 0) Azimuth = 360 - Azimuth;
+	
+	// and we return the dot product to be used in the rotation calculation
+	return Azimuth;
+}
 
 // DEBUG
 // This function is used to print errors that occur during runtime
