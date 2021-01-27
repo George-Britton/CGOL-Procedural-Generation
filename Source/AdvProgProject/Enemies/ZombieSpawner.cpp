@@ -39,8 +39,7 @@ void AZombieSpawner::InitZombie(AZombie* Zombie)
 
 	// Set the mesh and animation
 	Zombie->GetMesh()->SetSkeletalMesh(ZombieMesh);
-	Zombie->GetMesh()->SetAnimInstanceClass(AnimationBlueprint->GetAnimBlueprintGeneratedClass());
-	Cast<UZombieAnimInstance>(Zombie->GetMesh()->GetAnimInstance())->InitParentZombie(Zombie);
+	Cast<UZombieAnimInstance>(Zombie->GetMesh()->GetPostProcessInstance())->InitParentZombie(Zombie);
 
 	// Bind the zombie manager to the zombie's death delegate, and finally render
 	Zombie->OnZombieDeath.AddDynamic(Cast<AAPGameMode>(UGameplayStatics::GetGameMode(this))->ZombieManager, &UZombieManager::RemoveZombie);

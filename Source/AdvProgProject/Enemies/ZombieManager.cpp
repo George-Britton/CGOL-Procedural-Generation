@@ -100,12 +100,15 @@ void UZombieManager::SpawnZombie()
 {
 	TArray<AActor*> ZombieCountTest;
 	UGameplayStatics::GetAllActorsOfClass(Player, AZombie::StaticClass(), ZombieCountTest);
+	int32 NumOfZombies = ZombieCountTest.Num();
+	
 	// While there are any spawners within range and any zombies on the stack...
-	while (ZombieSpawnersInRange.Num() > 0 && ZombieCountTest.Num() < ZombiePopulation)
+	while (ZombieSpawnersInRange.Num() > 0 && NumOfZombies < ZombiePopulation)
 	{
 		// We choose a spawner in range and spawn a zombie from it. We then reduce the stack by one.
 		// We do it in this iterative way so if the spawners all leave the range, the rest of the stack remains until another spawns
 		ZombieSpawnersInRange[FMath::RandRange(0, ZombieSpawnersInRange.Num() - 1)]->SpawnZombie();
+		++NumOfZombies;
 	}
 }
 
