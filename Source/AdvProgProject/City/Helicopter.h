@@ -35,9 +35,6 @@ public:
 	// Player's end-game event dispatcher
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnPlayerReachEnd OnPlayerReachEnd;
-	
-	// Called when another actor overlaps with this actor
-	void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 	// Initialises the box around the added mesh
 	void InitialiseMeshAndBounds(USkeletalMesh* Mesh);

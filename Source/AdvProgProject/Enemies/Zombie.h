@@ -42,6 +42,8 @@ public:
 	// Reference to the player for chasing and attacking
 	UPROPERTY()
 		class APlayerCharacter* Player = nullptr;
+	UPROPERTY()
+		float DespawnDistance = 10000.f;
 	// Used to tell the player how much damage they're taking on an attack
 	UPROPERTY()
 		float Strength = 10.f;

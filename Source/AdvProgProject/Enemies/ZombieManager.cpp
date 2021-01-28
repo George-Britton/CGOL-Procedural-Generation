@@ -61,7 +61,7 @@ void UZombieManager::OnSphereEndOverlap(AActor* InActor, UPrimitiveComponent* Sp
 	if (!InActor->GetName().Contains("Spawner"))
 	{
 		AZombie* Zombie = Cast<AZombie>(InActor);
-		if (Sphere->GetName().Contains("Spawn")) { Zombie->KillZombie(); }
+		if (Sphere->GetName().Contains("Despawn")) { Zombie->KillZombie(); }
 		else if (Sphere->GetName().Contains("Activation"))
 		{
 			Zombie->ToggleMoveToPlayer(false);

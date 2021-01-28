@@ -58,7 +58,7 @@ void ACityGenerator::CreateCity()
 	ACity* City = GetWorld()->SpawnActor<ACity>(ACity::StaticClass(), this->GetTransform(), SpawnParams);
 
 	// Then we pass in all the user-define parameters
-	City->ReceiveCityParameters(CityEvolutionGenerations, CellLifeRules, CellLifePercent, BorderWidth, CityBuilding, Rows, Columns, PropArray, PropSpawnProbability, RoadMesh, RoadMaterial, HelicopterMesh, HelicopterScale, SpawnerFrequency, ZombieRoarSound, ZombieAnimationBlueprint, ZombieMesh);
+	City->ReceiveCityParameters(CityEvolutionGenerations, CellLifeRules, CellLifePercent, BorderWidth, CityBuilding, Rows, Columns, PropArray, PropSpawnProbability, RoadMesh, RoadMaterial, HelicopterMesh, HelicopterScale, SpawnerFrequency, ZombieRoarSound, ZombieMesh);
 }
 // Constructs the sea by the side of the city
 void ACityGenerator::CreateSea()

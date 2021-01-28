@@ -47,6 +47,7 @@ void AZombie::BeginPlay()
 	
 	// Here we fins an actor of class "player character", and cast it to the right class for the player
 	while (!Player) { Player = Cast<APlayerCharacter>(UGameplayStatics::GetActorOfClass(this, APlayerCharacter::StaticClass())); }
+	DespawnDistance = Player->EnemySpawnSphereRadius;
 }
 
 // Called every frame
@@ -59,7 +60,9 @@ void AZombie::Tick(float DeltaTime)
 
 	// if the zombie is attacking, and the timer is at 0, attack the player
 	if (ZombieState == EZombieState::ATTACKING)
-	{ if (ZombieAttackCountdown <= 0.f) Attack(); }
+	{
+		if (ZombieAttackCountdown <= 0.f) Attack();
+	}
 }
 
 // UTILITY
@@ -70,7 +73,6 @@ void AZombie::ToggleRender(bool Rendering)
 	{
 		this->GetMesh()->SetRenderStatic(false);
 		this->GetMesh()->SetVisibility(true);
-		SetActorTickEnabled(true);
 		ZombieState = EZombieState::IDLE;
 		OnZombieStateChange.Broadcast(EZombieState::IDLE);
 	}
@@ -78,7 +80,6 @@ void AZombie::ToggleRender(bool Rendering)
 	{
 		this->GetMesh()->SetRenderStatic(true);
 		this->GetMesh()->SetVisibility(false);
-		SetActorTickEnabled(false);
 		ZombieState = EZombieState::INACTIVE;
 		OnZombieStateChange.Broadcast(EZombieState::INACTIVE);
 	}

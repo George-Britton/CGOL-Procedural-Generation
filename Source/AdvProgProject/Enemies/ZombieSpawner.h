@@ -20,8 +20,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Zombie")
 		USoundBase* RoarSound = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Zombie")
-		UAnimBlueprint* AnimationBlueprint = nullptr;
-	UPROPERTY(EditAnywhere, Category = "Zombie")
 		USkeletalMesh* ZombieMesh = nullptr;
 
 	// Function to spawn a zombie

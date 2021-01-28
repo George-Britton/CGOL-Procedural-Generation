@@ -73,11 +73,13 @@ void APlayerCharacter::OnConstruction(const FTransform& Transform)
 	FireRate = FMath::Clamp(FireRate, 0.01f, FireRate);
 
 	// Valid range for the spheres means that the size order between them stays the same
-	EnemySpawnSphereRadius = FMath::Clamp(EnemySpawnSphereRadius, EnemyActivationSphereRadius, EnemySpawnSphereRadius);
+	EnemyDespawnSphereRadius = FMath::Clamp(EnemyDespawnSphereRadius, EnemySpawnSphereRadius, EnemyDespawnSphereRadius);
+	EnemySpawnSphereRadius = FMath::Clamp(EnemySpawnSphereRadius, EnemyActivationSphereRadius, EnemyDespawnSphereRadius);
 	EnemyActivationSphereRadius = FMath::Clamp(EnemyActivationSphereRadius, EnemyGunshotSphereRadius, EnemySpawnSphereRadius);
 	EnemyGunshotSphereRadius = FMath::Clamp(EnemyGunshotSphereRadius, EnemySightSphereRadius, EnemyActivationSphereRadius);
 	EnemySightSphereRadius = FMath::Clamp(EnemySightSphereRadius, EnemyAttackSphereRadius, EnemyGunshotSphereRadius);
 	EnemyAttackSphereRadius = FMath::Clamp(EnemyAttackSphereRadius, 1.f, EnemySightSphereRadius);
+	EnemyDespawnSphere->SetSphereRadius(EnemySpawnSphereRadius, true);
 	EnemySpawnSphere->SetSphereRadius(EnemySpawnSphereRadius, true);
 	EnemyActivationSphere->SetSphereRadius(EnemyActivationSphereRadius, true);
 	EnemyGunshotSphere->SetSphereRadius(EnemyGunshotSphereRadius, true);
@@ -174,11 +176,13 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::CreateEnemySpheres()
 {
 	// Here we create the enemy spheres and parent them to the root of the player for locked movement
+	EnemyDespawnSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Despawn Sphere"));
 	EnemySpawnSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Spawn Sphere"));
 	EnemyActivationSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Activation Sphere"));
 	EnemyGunshotSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Gunshot Sphere"));
 	EnemySightSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Sight Sphere"));
 	EnemyAttackSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Enemy Attack Sphere"));
+	EnemyDespawnSphere->SetupAttachment(this->RootComponent);
 	EnemySpawnSphere->SetupAttachment(this->RootComponent);
 	EnemyActivationSphere->SetupAttachment(this->RootComponent);
 	EnemyGunshotSphere->SetupAttachment(this->RootComponent);
@@ -186,6 +190,8 @@ void APlayerCharacter::CreateEnemySpheres()
 	EnemyAttackSphere->SetupAttachment(this->RootComponent);
 
 	// This binds their overlap and end overlap to event dispatcher functions
+	EnemyDespawnSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
+	EnemyDespawnSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
 	EnemySpawnSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
 	EnemySpawnSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnSphereEndOverlapFunction);
 	EnemyActivationSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnSphereOverlapFunction);
@@ -199,7 +205,10 @@ void APlayerCharacter::CreateEnemySpheres()
 }
 // These three are used to announce when an enemy overlaps with a sphere
 void APlayerCharacter::OnSphereOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{ if (OtherActor->GetName().Contains("Zombie")) OnPlayerSphereOverlap.Broadcast(OtherActor, HitComp); }
+{
+	if (OtherActor->GetName().Contains("Zombie")) OnPlayerSphereOverlap.Broadcast(OtherActor, HitComp);
+	else if (OtherActor->GetName().Contains("Helicopter") && HitComp->GetName().Contains("Attack")) Cast<AHelicopter>(OtherActor)->OnPlayerReachEnd.Broadcast();
+}
 // These three are used to announce when an enemy ends overlap with a sphere
 void APlayerCharacter::OnSphereEndOverlapFunction(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 { if (OtherActor->GetName().Contains("Zombie")) OnPlayerSphereEndOverlap.Broadcast(OtherActor, HitComp); }

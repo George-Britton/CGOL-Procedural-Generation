@@ -86,15 +86,19 @@ public:
 
 	// Variables for the enemy activation spheres
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		float EnemySpawnSphereRadius = 10000.f;
+		float EnemyDespawnSphereRadius = 20000.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		float EnemyActivationSphereRadius = 5000.f;
+		float EnemySpawnSphereRadius = 15000.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		float EnemyGunshotSphereRadius = 2500.f;
+		float EnemyActivationSphereRadius = 8000.f;
+	UPROPERTY(EditAnywhere, Category = "Enemies")
+		float EnemyGunshotSphereRadius = 2000.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 		float EnemySightSphereRadius = 1250.f;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 		float EnemyAttackSphereRadius = 75;
+	UPROPERTY()
+		USphereComponent* EnemyDespawnSphere = nullptr;
 	UPROPERTY()
 		USphereComponent* EnemySpawnSphere = nullptr;
 	UPROPERTY()

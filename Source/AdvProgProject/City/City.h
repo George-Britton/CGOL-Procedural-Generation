@@ -77,8 +77,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 		USoundBase* ZombieRoarSound = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		UAnimBlueprint* ZombieAnimationBlueprint = nullptr;
-	UPROPERTY(EditAnywhere, Category = "Enemies")
 		USkeletalMesh* ZombieMesh = nullptr;
 	
 	// ENDING
@@ -131,5 +129,5 @@ private:
 
 public:
 	// Called to set the city parameters to the user-defined ones
-	void ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale, int32 InSpawnerFrequency, USoundBase* InRoarSound, UAnimBlueprint* InAnimBlueprint, USkeletalMesh* InZombieMesh);
+	void ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale, int32 InSpawnerFrequency, USoundBase* InRoarSound, USkeletalMesh* InZombieMesh);
 };

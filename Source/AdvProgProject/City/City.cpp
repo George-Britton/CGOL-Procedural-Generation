@@ -23,7 +23,7 @@ ACity::ACity()
 }
 
 // Called to set the city parameters to the user-defined ones
-void ACity::ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale, int32 InSpawnerFrequency, USoundBase* InRoarSound, UAnimBlueprint* InAnimBlueprint, USkeletalMesh* InZombieMesh)
+void ACity::ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> InLifeRules, int32 InLifePercent, int32 InBorderWidth, UStaticMesh* InCityBuilding, int32 InRows, int32 InColumns, TArray<UStaticMesh*> InPropArray, float InPropProbability, UStaticMesh* InRoadMesh, UMaterial* InRoadMaterial, USkeletalMesh* InHeliMesh, float InHeliScale, int32 InSpawnerFrequency, USoundBase* InRoarSound, USkeletalMesh* InZombieMesh)
 {
 	// We set the generation parameters to the user-defined
 	CityEvolutionGenerations = InCityEvolutions;
@@ -41,7 +41,6 @@ void ACity::ReceiveCityParameters(int32 InCityEvolutions, TArray<FCellLifeRule> 
 	HelicopterScale = InHeliScale;
 	SpawnerFrequency = InSpawnerFrequency;
 	ZombieRoarSound = InRoarSound;
-	ZombieAnimationBlueprint = InAnimBlueprint;
 	ZombieMesh = InZombieMesh;
 
 	// We then sanitize the input and filter it through to the required components
@@ -349,7 +348,6 @@ void ACity::PlaceSpawner(FTransform PlacementTransform)
 
 	// Spawn the spawner and set the variables
 	AZombieSpawner* Spawner = GetWorld()->SpawnActor<AZombieSpawner>(SpawnerSpawnLoc, FRotator::ZeroRotator, SpawnParams);
-	Spawner->AnimationBlueprint = ZombieAnimationBlueprint;
 	Spawner->RoarSound = ZombieRoarSound;
 	Spawner->ZombieMesh = ZombieMesh;
 }

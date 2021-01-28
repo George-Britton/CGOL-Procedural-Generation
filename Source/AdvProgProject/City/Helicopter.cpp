@@ -21,12 +21,6 @@ AHelicopter::AHelicopter()
 	HelicopterMeshComponent->SetCollisionProfileName("BlockAll");
 }
 
-// Called when another actor overlaps with this actor
-void AHelicopter::NotifyActorBeginOverlap(AActor* OtherActor)
-{
-	if (OtherActor->GetName().Contains("Player")) OnPlayerReachEnd.Broadcast();
-}
-
 // Initialises the box around the added mesh
 void AHelicopter::InitialiseMeshAndBounds(USkeletalMesh* Mesh)
 {

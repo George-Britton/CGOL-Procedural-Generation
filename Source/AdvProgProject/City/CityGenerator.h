@@ -107,8 +107,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 		USoundBase* ZombieRoarSound = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Enemies")
-		UAnimBlueprint* ZombieAnimationBlueprint = nullptr;
-	UPROPERTY(EditAnywhere, Category = "Enemies")
 		USkeletalMesh* ZombieMesh = nullptr;
 	
 	// ENDING
