@@ -44,7 +44,7 @@ void UZombieManager::OnSphereOverlap(AActor* InActor, UPrimitiveComponent* Spher
 	}else
 	{ // if it's a spawner, we activate or deactivate it depending on distance
 		AZombieSpawner* Spawner = Cast<AZombieSpawner>(InActor);
-		if (Sphere->GetName().Contains("Spawn")) 
+		if (Sphere->GetName().Contains("Spawn") && !Sphere->GetName().Contains("Despawn")) 
 		{
 			ZombieSpawnersInRange.AddUnique(Spawner);
 			TArray<AActor*> ZombieCountTest;
@@ -72,7 +72,7 @@ void UZombieManager::OnSphereEndOverlap(AActor* InActor, UPrimitiveComponent* Sp
 	}else
 	{ // if it's a spawner, we deactivate it
 		AZombieSpawner* Spawner = Cast<AZombieSpawner>(InActor);
-		if (Sphere->GetName().Contains("Spawn")) { ZombieSpawnersInRange.Remove(Spawner); }
+		if (Sphere->GetName().Contains("Spawn") && !Sphere->GetName().Contains("Despawn")) { ZombieSpawnersInRange.Remove(Spawner); }
 	}
 }
 // Used to check all the zombies at the beginning to see what they should be involved in
